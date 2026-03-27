@@ -80,7 +80,7 @@ results_df = pd.DataFrame(index = gene_expressions.columns, columns = ['train_sc
 
 
 #for the remaining code need to execute per target gene (per gene in gene_expressions)
-for target_gene in gene_expressions.columns:
+for target_gene in gene_expressions.columns[12000:]:
     #initialise an early stopper to end training if loss on test data does not fall by at least 0.01 MSE for 3 eopochs in a row
     early_stopping = EarlyStopping(patience=3, delta=0.01, verbose=True)
     
