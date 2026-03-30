@@ -1,5 +1,4 @@
 #converting notebook into python file for easier running
-
 import os
 import torch
 from torch import nn
@@ -30,7 +29,6 @@ from train_one_epoch import train_one_epoch
 #import dataset object
 from customTFGE_dataset import CustomTFGE
 
-#define device
 device = torch.accelerator.current_accelerator().type if torch.accelerator.is_available() else "cpu"
 print(f"Using {device} device")
 
@@ -68,19 +66,16 @@ def TF_subset(net, target_gene):
 learning_rate = 1e-3
 #run 1 sample at a time, but run through each sample per training epoch
 batch_size = TF_expressions.shape[0]
-#train on each sample 5 times
-epochs =  200 #12747 * 5
+#max 100 epochs
+epochs =  100 #12747 * 5
 #initialize MSE loss function - same as LEMBAS
 loss_fn = nn.MSELoss()
-
 
 #create a results dataframe
 results_df = pd.DataFrame(index = gene_expressions.columns, columns = ['train_score', 'test_score'])
 
-
-
 #for the remaining code need to execute per target gene (per gene in gene_expressions)
-for target_gene in gene_expressions.columns[12000:]:
+for target_gene in gene_expressions.columns[0:5]:
     #initialise an early stopper to end training if loss on test data does not fall by at least 0.01 MSE for 3 eopochs in a row
     early_stopping = EarlyStopping(patience=3, delta=0.01, verbose=True)
     
@@ -91,7 +86,12 @@ for target_gene in gene_expressions.columns[12000:]:
 
     train_dataset, test_dataset = torch.utils.data.random_split(dataset, [0.8, 0.2])
 
-    model = SimpleMMLModel(activation_function_map['MML'], TF_expression_subset.shape[1]).to(device)
+    model = SimpleMMLModel(activation_function_map['MML'], TF_expression_subset.shape[1])
+
+    if torch.cuda.device_count() > 1:
+        model = nn.DataParallel(model)
+        
+    model.to(device)
 
     #initialise same optimiser as LEMBAS
     optimiser = torch.optim.Adam(model.parameters(), lr=learning_rate)
