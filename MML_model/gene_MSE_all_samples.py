@@ -11,7 +11,6 @@ def gene_MSE_all_samples(dataloader, model, loss_fn, target_gene, rev_log = Fals
 
             #create a prediction - this will be 1 value for given sample and target gene
             pred = model(X)
-
             #for log(TPM+1) model reverse the transforms so MSE is comparable with TPM models
             if rev_log == True:
                 pred = pred.expm1()

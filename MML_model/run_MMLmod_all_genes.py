@@ -75,7 +75,7 @@ loss_fn = nn.MSELoss()
 results_df = pd.DataFrame(index = gene_expressions.columns, columns = ['train_score', 'test_score'])
 
 #for the remaining code need to execute per target gene (per gene in gene_expressions)
-for target_gene in gene_expressions.columns[0:5]:
+for target_gene in gene_expressions.columns:
     #initialise an early stopper to end training if loss on test data does not fall by at least 0.01 MSE for 3 eopochs in a row
     early_stopping = EarlyStopping(patience=3, delta=0.01, verbose=True)
     
@@ -90,7 +90,7 @@ for target_gene in gene_expressions.columns[0:5]:
 
     if torch.cuda.device_count() > 1:
         model = nn.DataParallel(model)
-        
+
     model.to(device)
 
     #initialise same optimiser as LEMBAS
