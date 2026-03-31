@@ -75,10 +75,9 @@ results_df = pd.DataFrame(index = gene_expressions.columns, columns = ['train_sc
 
 #read TPM results file to find those that didn't save (didn't early stop)
 results_df = pd.read_csv(f'{DATA_ROOT}/MSE_results_TPM.csv', index_col = 0, header = 0)
-missed_genes = list(results_df.loc[results_df['train_score'].isna(), :].index)
 
 #for the remaining code need to execute per target gene (per gene in gene_expressions)
-for target_gene in missed_genes:
+for target_gene in gene_expressions.columns:
     print(target_gene)
     #initialise an early stopper to end training if loss on test data does not fall by at least 0.01 MSE for 3 eopochs in a row
     early_stopping = EarlyStopping(patience=3, delta=0.01, verbose=True)
@@ -115,6 +114,7 @@ for target_gene in missed_genes:
         if early_stopping.stop_training:
             print(f"Early stopping at epoch {t+1}")  
             break
+
     results_df.loc[target_gene, 'train_score'] = gene_MSE_all_samples(test_dataloader, model, loss_fn, target_gene)
     results_df.loc[target_gene, 'test_score'] = gene_MSE_all_samples(train_dataloader, model, loss_fn, target_gene)
     print(results_df.loc[target_gene, 'train_score'])
