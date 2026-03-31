@@ -4,7 +4,6 @@ import torch
 from torch import nn
 from torch.utils.data import Dataset
 from torch.utils.data import DataLoader
-from torchvision import datasets, transforms
 from torch import tensor
 import matplotlib.pyplot as plt
 
@@ -33,7 +32,7 @@ device = torch.accelerator.current_accelerator().type if torch.accelerator.is_av
 print(f"Using {device} device")
 
 #define root directory
-DATA_ROOT = '/home/alexanderb/LEMBAS-RNN-benchmark'
+DATA_ROOT = '/Users/alexanderbroadley/Documents/PhD/Zhang Lab/Learning_PyTorch/data'
 
 print('Loading Datasets')
 #Load network
@@ -75,7 +74,7 @@ loss_fn = nn.MSELoss()
 results_df = pd.DataFrame(index = gene_expressions.columns, columns = ['train_score', 'test_score'])
 
 #for the remaining code need to execute per target gene (per gene in gene_expressions)
-for target_gene in gene_expressions.columns[0:5]:
+for target_gene in gene_expressions.columns:
     #initialise an early stopper to end training if loss on test data does not fall by at least 0.01 MSE for 3 eopochs in a row
     early_stopping = EarlyStopping(patience=3, delta=0.01, verbose=True)
     
@@ -109,11 +108,11 @@ for target_gene in gene_expressions.columns[0:5]:
         early_stopping.check_early_stop(test_loss)
     
         if early_stopping.stop_training:
-            #print(f"Early stopping at epoch {t+1}")
+            print(f"Early stopping at epoch {t+1}")
             results_df.loc[target_gene, 'train_score'] = gene_MSE_all_samples(test_dataloader, model, loss_fn, target_gene)
             results_df.loc[target_gene, 'test_score'] = gene_MSE_all_samples(train_dataloader, model, loss_fn, target_gene)
 
-            torch.save(model, f'models/TPM_models/{target_gene}_TPM_model.pth')
+            torch.save(model, f'/Users/alexanderbroadley/Documents/PhD/Zhang Lab/Learning_PyTorch/models/TPM_models/{target_gene}_TPM_model.pth')
             break
 
 results_df.to_csv('data/MSE_results_TPM.csv')
