@@ -89,7 +89,7 @@ for target_gene in gene_expressions.columns:
 
     if torch.cuda.device_count() > 1:
         model = nn.DataParallel(model)
-        
+
     model.to(device)
 
     #initialise same optimiser as LEMBAS
