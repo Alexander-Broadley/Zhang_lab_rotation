@@ -32,7 +32,7 @@ device = torch.accelerator.current_accelerator().type if torch.accelerator.is_av
 print(f"Using {device} device")
 
 #define root directory
-DATA_ROOT = '/Users/alexanderbroadley/Documents/PhD/Zhang Lab/Learning_PyTorch/data'
+DATA_ROOT = './data'
 
 print('Loading Datasets')
 #Load network
@@ -73,8 +73,13 @@ loss_fn = nn.MSELoss()
 #create a results dataframe
 results_df = pd.DataFrame(index = gene_expressions.columns, columns = ['train_score', 'test_score'])
 
+#read TPM results file to find those that didn't save (didn't early stop)
+results_df = pd.read_csv(f'{DATA_ROOT}/MSE_results_TPM.csv', index_col = 0, header = 0)
+missed_genes = list(results_df.loc[results_df['train_score'].isna(), :].index)
+
 #for the remaining code need to execute per target gene (per gene in gene_expressions)
-for target_gene in gene_expressions.columns:
+for target_gene in missed_genes:
+    print(target_gene)
     #initialise an early stopper to end training if loss on test data does not fall by at least 0.01 MSE for 3 eopochs in a row
     early_stopping = EarlyStopping(patience=3, delta=0.01, verbose=True)
     
@@ -83,7 +88,7 @@ for target_gene in gene_expressions.columns:
 
     dataset = CustomTFGE(device, TF_expressions=TF_expression_subset, gene_expressions=gene_expressions, network = net, target_gene = target_gene)
 
-    train_dataset, test_dataset = torch.utils.data.random_split(dataset, [0.8, 0.2])
+    train_dataset, test_dataset = torch.utils.data.random_split(dataset, [0.8, 0.2], generator=torch.Generator().manual_seed(42))
 
     model = SimpleMMLModel(activation_function_map['MML'], TF_expression_subset.shape[1])
 
@@ -108,11 +113,12 @@ for target_gene in gene_expressions.columns:
         early_stopping.check_early_stop(test_loss)
     
         if early_stopping.stop_training:
-            print(f"Early stopping at epoch {t+1}")
-            results_df.loc[target_gene, 'train_score'] = gene_MSE_all_samples(test_dataloader, model, loss_fn, target_gene)
-            results_df.loc[target_gene, 'test_score'] = gene_MSE_all_samples(train_dataloader, model, loss_fn, target_gene)
-
-            torch.save(model, f'/Users/alexanderbroadley/Documents/PhD/Zhang Lab/Learning_PyTorch/models/TPM_models/{target_gene}_TPM_model.pth')
+            print(f"Early stopping at epoch {t+1}")  
             break
+    results_df.loc[target_gene, 'train_score'] = gene_MSE_all_samples(test_dataloader, model, loss_fn, target_gene)
+    results_df.loc[target_gene, 'test_score'] = gene_MSE_all_samples(train_dataloader, model, loss_fn, target_gene)
+    print(results_df.loc[target_gene, 'train_score'])
+    torch.save(model, f'./models/TPM_models/{target_gene}_TPM_model.pth')
 
-results_df.to_csv('data/MSE_results_TPM.csv')
+results_df.to_csv('data/TEMP_results.csv')
+

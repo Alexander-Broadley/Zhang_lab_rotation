@@ -85,7 +85,7 @@ for target_gene in gene_expressions.columns:
 
     dataset = CustomTFGE(device, TF_expressions=TF_expression_subset, gene_expressions=gene_expressions, network = net, target_gene = target_gene)
 
-    train_dataset, test_dataset = torch.utils.data.random_split(dataset, [0.8, 0.2])
+    train_dataset, test_dataset = torch.utils.data.random_split(dataset, [0.8, 0.2], generator=torch.Generator().manual_seed(42))
 
     #this time activation function is a standard leaky ReLU
     model = referenceModel(nn.LeakyReLU(0.01), TF_expression_subset.shape[1]).to(device)
