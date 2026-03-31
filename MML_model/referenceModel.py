@@ -12,7 +12,7 @@ class referenceModel(nn.Module):
         self.linear_out = nn.Linear(n_tfs, 1)
 
         # activation function
-        self.activation_function = self.activation_function
+        self.activation_function = activation_function
     
     def forward(self, x):
         #project an input for each TF to activation with a linear layer

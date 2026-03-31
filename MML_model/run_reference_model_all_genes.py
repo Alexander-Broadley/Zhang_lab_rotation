@@ -76,7 +76,7 @@ loss_fn = nn.MSELoss()
 results_df = pd.DataFrame(index = gene_expressions.columns, columns = ['train_score', 'test_score'])
 
 #for the remaining code need to execute per target gene (per gene in gene_expressions)
-for target_gene in gene_expressions.columns[0:5]:
+for target_gene in gene_expressions.columns:
     #initialise an early stopper to end training if loss on test data does not fall by at least 0.01 MSE for 3 eopochs in a row
     early_stopping = EarlyStopping(patience=3, delta=0.01, verbose=True)
     
@@ -88,7 +88,7 @@ for target_gene in gene_expressions.columns[0:5]:
     train_dataset, test_dataset = torch.utils.data.random_split(dataset, [0.8, 0.2])
 
     #this time activation function is a standard leaky ReLU
-    model = referenceModel(nn.LeakReLU(0.01), TF_expression_subset.shape[1]).to(device)
+    model = referenceModel(nn.LeakyReLU(0.01), TF_expression_subset.shape[1]).to(device)
 
     #initialise same optimiser as LEMBAS
     optimiser = torch.optim.Adam(model.parameters(), lr=learning_rate)
