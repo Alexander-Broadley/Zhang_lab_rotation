@@ -20,9 +20,9 @@ def TF_subset(net, target_gene):
 #Load Datasets
 #---------------------------------------------------------------
 
-MODEL_ROOT = '/home/alexanderb/Zhang_lab/MML_model/models/TPM_models'
+MODEL_ROOT = './models'
 
-DATA_ROOT = '/home/alexanderb/LEMBAS-RNN-benchmark'
+DATA_ROOT = './data'
 external_expressions = pd.read_csv(f'{DATA_ROOT}/Full data files/Liver_bulk_external.tsv', index_col = 0, sep = '\t')
 
 #Load network
@@ -64,9 +64,9 @@ TF_expressions = external_expressions[orig_dataset_TFs]
 #only include target genes for which there exists a model
 gene_expressions = external_expressions[[gene for gene in list(external_expressions.columns) if gene in orig_dataset_GEs]]
 
-print(gene_expressions.shape)
-print(TF_expressions.shape)
-print(external_expressions.shape)
+#refilter to only those in network now using external dataset
+TF_expressions = TF_expressions[[gene for gene in TF_expressions.columns if gene in list(network_nodes)]]
+gene_expressions = gene_expressions[[gene for gene in gene_expressions.columns if gene in list(network_nodes)]] 
 
 #---------------------------------------------------------------
 #load models per target gene
@@ -79,17 +79,31 @@ loss_fn = nn.MSELoss()
 #initialise eval results df
 results_df = pd.DataFrame(index = gene_expressions.columns, columns = ['external_set_score'])
 
-for target_gene in orig_dataset_GEs:
-    
+missing_models = []
+
+for target_gene in gene_expressions.columns:
+    print(f'Generating scores for {target_gene} model')
     #print(f'Creating model for {target_gene}')
     TF_expression_subset = TF_expressions[TF_subset(net, target_gene)]
 
     dataset = CustomTFGE(device, TF_expressions=TF_expression_subset, gene_expressions=gene_expressions, network = net, target_gene = target_gene)
+    
+    
+    #shouldn't need this anymore - fixed model saving issue
+    try:
+        model = torch.load(f"{MODEL_ROOT}/TPM_models/{target_gene}_TPM_model.pth", weights_only = False)
+        eval_dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=False)
+        results_df.loc[target_gene, 'external_set_score'] = gene_MSE_all_samples(eval_dataloader, model, loss_fn, target_gene, rev_log = True)
+    except:
+        missing_models.append(target_gene)
+        print(missing_models)
+        pass
 
-    model = torch.load(f"{MODEL_ROOT}/{target_gene}_TPM_model.pth", weights_only = False)
+results_df.to_csv('data/external_MSE_TPM.csv')
 
-    eval_dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=False)
-    results_df.loc[target_gene, 'external_set_score'] = gene_MSE_all_samples(eval_dataloader, model, loss_fn, target_gene, rev_log = True)
-    print(results_df)
-
+'''
 print(results_df)
+print(missing_models)
+file1 = open(f'{DATA_ROOT}/missing_TPM_models.txt', 'w')
+file1.writelines(missing_models)
+file1.close()'''
