@@ -29,7 +29,7 @@ def TF_subset(net, target_gene):
     return(list(net['TF'][net['Gene'] == target_gene])) 
 
 #repeat through all genes for which there is a model
-for gene in merged_results.index[0:100]:
+for gene in merged_results.index:
     print(f'Processing model for {gene}')
     
     #run same target gene specific pre-processing (retrieves list of genes that will correspond to the input features)
