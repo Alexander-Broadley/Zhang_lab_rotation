@@ -71,7 +71,7 @@ epochs =  100 #12747 * 5
 loss_fn = nn.MSELoss()
 
 #create a results dataframe
-results_df = pd.DataFrame(index = gene_expressions.columns, columns = ['train_score', 'test_score'])
+results_df = pd.DataFrame(index = gene_expressions.columns, columns = ['train_score', 'test_score', 'stopped_early'])
 
 #read TPM results file to find those that didn't save (didn't early stop)
 results_df = pd.read_csv(f'{DATA_ROOT}/MSE_results_TPM.csv', index_col = 0, header = 0)
@@ -103,7 +103,7 @@ for target_gene in gene_expressions.columns:
     test_dataloader = DataLoader(test_dataset, batch_size=batch_size, shuffle=True)
 
     for t in range(epochs):
-        #print(f"Epoch {t+1}\n-------------------------------")
+        print(f"Epoch {t+1}\n-------------------------------")
         train_one_epoch(train_dataloader, model, loss_fn, optimiser)
 
         test_loss = gene_MSE_all_samples(test_dataloader, model, loss_fn, target_gene)
@@ -113,6 +113,7 @@ for target_gene in gene_expressions.columns:
     
         if early_stopping.stop_training:
             print(f"Early stopping at epoch {t+1}")  
+            results_df.loc[target_gene, 'stopped_early'] = 1
             break
 
     results_df.loc[target_gene, 'train_score'] = gene_MSE_all_samples(test_dataloader, model, loss_fn, target_gene)

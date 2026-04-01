@@ -47,7 +47,7 @@ device = torch.accelerator.current_accelerator().type if torch.accelerator.is_av
 print(f"Using {device} device")
 
 #define root directory
-DATA_ROOT = '/Users/alexanderbroadley/Documents/PhD/Zhang Lab/Learning_PyTorch/data'
+DATA_ROOT = './data'
 
 print('Loading Datasets')
 
@@ -97,7 +97,7 @@ epochs = 100
 loss_fn = nn.MSELoss()
 
 #create a results dataframe
-results_df = pd.DataFrame(index = gene_expressions.columns, columns = ['train_score', 'test_score'])
+results_df = pd.DataFrame(index = gene_expressions.columns, columns = ['train_score', 'test_score', 'stopped_early'])
 
 ######################################################################
 # Create model per target gene
@@ -105,6 +105,7 @@ results_df = pd.DataFrame(index = gene_expressions.columns, columns = ['train_sc
 
 #for the remaining code need to execute per target gene (per gene in gene_expressions)
 for target_gene in gene_expressions.columns:
+    print(f'Creating model for {target_gene}')
     #initialise an early stopper to end training if loss on test data does not fall by at least 0.01 MSE for 3 eopochs in a row
     early_stopping = EarlyStopping(patience=3, delta=0.01, verbose=True)
     
@@ -133,13 +134,9 @@ for target_gene in gene_expressions.columns:
         early_stopping.check_early_stop(test_loss)
     
         if early_stopping.stop_training:
+            results_df.loc[target_gene, 'stopped_early'] = 1
             print(f"Early stopping at epoch {t+1}")
             break
-    
-    results_df.loc[target_gene, 'train_score'] = gene_MSE_all_samples(test_dataloader, model, loss_fn, target_gene, rev_log = True)
-    results_df.loc[target_gene, 'test_score'] = gene_MSE_all_samples(train_dataloader, model, loss_fn, target_gene, rev_log = True)
-
-    torch.save(model, f'/Users/alexanderbroadley/Documents/PhD/Zhang Lab/Learning_PyTorch/models/logTPM_models/{target_gene}_logTPM_model.pth')
 
     results_df.loc[target_gene, 'train_score'] = gene_MSE_all_samples(test_dataloader, model, loss_fn, target_gene, rev_log = True)
     results_df.loc[target_gene, 'test_score'] = gene_MSE_all_samples(train_dataloader, model, loss_fn, target_gene, rev_log = True)
