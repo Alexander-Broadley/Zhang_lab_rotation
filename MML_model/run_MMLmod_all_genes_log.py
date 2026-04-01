@@ -135,10 +135,10 @@ for target_gene in gene_expressions.columns:
     
         if early_stopping.stop_training:
             #print(f"Early stopping at epoch {t+1}")
-            results_df.loc[target_gene, 'train_score'] = gene_MSE_all_samples(test_dataloader, model, loss_fn, target_gene, rev_log = True)
-            results_df.loc[target_gene, 'test_score'] = gene_MSE_all_samples(train_dataloader, model, loss_fn, target_gene, rev_log = True)
-
-            torch.save(model, f'models/LogTPM_models/{target_gene}_logTPM_model.pth')
             break
+
+    results_df.loc[target_gene, 'train_score'] = gene_MSE_all_samples(test_dataloader, model, loss_fn, target_gene, rev_log = True)
+    results_df.loc[target_gene, 'test_score'] = gene_MSE_all_samples(train_dataloader, model, loss_fn, target_gene, rev_log = True)
+    torch.save(model, f'models/LogTPM_models/{target_gene}_logTPM_model.pth')
 
 results_df.to_csv('data/MSE_results_logTPM.csv')
