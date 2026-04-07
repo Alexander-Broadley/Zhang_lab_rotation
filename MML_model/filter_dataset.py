@@ -18,8 +18,8 @@ def filter_datasets(DATA_ROOT, load_genes = True):
     net = net[net['TF'].isin(TF_expressions.columns)]
 
     #Identify genes in network
-    network_tfs = set(net['TF'].unique())      # TFs
-    network_genes = set(net['Gene'].unique())  # target genes
+    network_tfs = set(net['TF'].unique())
+    network_genes = set(net['Gene'].unique())
     network_nodes = network_tfs | network_genes
 
     #subset TF and gene expressions to just those that appear in the network
@@ -29,13 +29,3 @@ def filter_datasets(DATA_ROOT, load_genes = True):
         return(TF_expressions, gene_expressions, net)
     else:
         return(TF_expressions, net)
-
-
-#===========================================================================================
-#Load datasets
-#===========================================================================================
-
-
-#===========================================================================================
-#Filter datasets
-#===========================================================================================

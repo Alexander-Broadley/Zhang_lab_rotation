@@ -30,6 +30,7 @@ def TF_subset(net, target_gene):
 
 #repeat through all genes for which there is a model
 for gene in merged_results.index:
+    gene = 'MBOAT7'
     print(f'Processing model for {gene}')
     
     #run same target gene specific pre-processing (retrieves list of genes that will correspond to the input features)

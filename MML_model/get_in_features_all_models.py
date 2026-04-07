@@ -5,11 +5,12 @@ import numpy as np
 DATA_ROOT = './data'
 MODEL_ROOT = './models'
 
-merged_results = pd.read_csv(f'{DATA_ROOT}/merged_results.csv', index_col= 0, header = 0)
-merged_results['in_features'] = 0
+TPM_res = pd.read_csv(f'{DATA_ROOT}/MSE_results_TPM.csv', index_col= 0, header = 0)
+TPM_res['in_features'] = 0
 
-for gene in merged_results.index:
+for gene in TPM_res.index:
     model = torch.load(f'{MODEL_ROOT}/TPM_models/{gene}_TPM_model.pth', weights_only = False)
-    merged_results.loc[gene, 'in_features'] = model.linear_in.in_features
+    TPM_res.loc[gene, 'in_features'] = model.linear_out.in_features
+print(TPM_res)
 
-merged_results.to_csv(f'{DATA_ROOT}/merged_results.csv')
+TPM_res.to_csv(f'{DATA_ROOT}/TPM_res_in_features.csv')

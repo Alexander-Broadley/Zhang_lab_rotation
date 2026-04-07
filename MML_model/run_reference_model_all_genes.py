@@ -33,7 +33,7 @@ device = torch.accelerator.current_accelerator().type if torch.accelerator.is_av
 print(f"Using {device} device")
 
 #define root directory
-DATA_ROOT = '/home/alexanderb/LEMBAS-RNN-benchmark'
+DATA_ROOT = './data'
 
 print('Loading Datasets')
 #Load network
