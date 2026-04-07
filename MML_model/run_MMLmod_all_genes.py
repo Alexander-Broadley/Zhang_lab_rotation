@@ -68,7 +68,12 @@ batch_size = TF_expressions.shape[0]
 #max 100 epochs
 epochs =  100 #12747 * 5
 #initialize MSE loss function - same as LEMBAS
-loss_fn = nn.MSELoss()
+#loss_fn = nn.MSELoss()
+
+#trying with new loss_fn
+from pearsons_loss import PearsonLoss
+loss_fn = PearsonLoss()
+
 
 #create a results dataframe
 results_df = pd.DataFrame(index = gene_expressions.columns, columns = ['train_score', 'test_score', 'stopped_early'])
@@ -80,7 +85,7 @@ results_df = pd.read_csv(f'{DATA_ROOT}/MSE_results_TPM.csv', index_col = 0, head
 for target_gene in gene_expressions.columns:
     print(target_gene)
     #initialise an early stopper to end training if loss on test data does not fall by at least 0.01 MSE for 3 eopochs in a row
-    early_stopping = EarlyStopping(patience=3, delta=0.01, verbose=True)
+    early_stopping = EarlyStopping(patience=3, delta=0.02, verbose=True)
     
     #print(f'Creating model for {target_gene}')
     TF_expression_subset = TF_expressions[TF_subset(net, target_gene)]
@@ -109,6 +114,9 @@ for target_gene in gene_expressions.columns:
         test_loss = gene_MSE_all_samples(test_dataloader, model, loss_fn, target_gene)
         #print(f'Test MSE this epoch is: {test_loss}')
 
+        if t % 5 == 0:
+            print(test_loss)
+
         early_stopping.check_early_stop(test_loss)
     
         if early_stopping.stop_training:
@@ -119,7 +127,7 @@ for target_gene in gene_expressions.columns:
     results_df.loc[target_gene, 'train_score'] = gene_MSE_all_samples(test_dataloader, model, loss_fn, target_gene)
     results_df.loc[target_gene, 'test_score'] = gene_MSE_all_samples(train_dataloader, model, loss_fn, target_gene)
     print(results_df.loc[target_gene, 'train_score'])
-    torch.save(model, f'./models/TPM_models/{target_gene}_TPM_model.pth')
+    torch.save(model, f'./models/pearsons_models/{target_gene}_TPM_model.pth')
 
-results_df.to_csv('data/TEMP_results.csv')
+results_df.to_csv('data/Pearsons_results.csv')
 

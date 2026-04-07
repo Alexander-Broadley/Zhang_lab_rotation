@@ -13,14 +13,14 @@ FIGURE_ROOT = './figures'
 #======================================================================
 
 
-train_predicted_TPM = pd.read_csv(f"{DATA_ROOT}/Train_dataset_predicted_expressions.csv", index_col=0, header=0)
+train_predicted_TPM = pd.read_csv(f"{DATA_ROOT}/Train_dataset_predicted_expressions_REFERENCE.csv", index_col=0, header=0)
 train_actual_TPM = pd.read_csv(f"{DATA_ROOT}/Train_dataset_actual_expressions.csv", index_col=0, header=0)
 
-test_predicted_TPM = pd.read_csv(f"{DATA_ROOT}/Test_dataset_predicted_expressions.csv", index_col=0, header=0)
+test_predicted_TPM = pd.read_csv(f"{DATA_ROOT}/Test_dataset_predicted_expressions_REFERENCE.csv", index_col=0, header=0)
 test_actual_TPM = pd.read_csv(f"{DATA_ROOT}/Test_dataset_actual_expressions.csv", index_col=0, header=0)
 
 external_actual_TPM = pd.read_csv(f"{DATA_ROOT}/Full data files/liver_bulk_external.tsv", sep = '\t', index_col=0, header=0)
-external_predicted_TPM = pd.read_csv(f"{DATA_ROOT}/external_dataset_predicted_expressions.csv", index_col=0, header=0)
+external_predicted_TPM = pd.read_csv(f"{DATA_ROOT}/external_dataset_predicted_expressions_REFERENCE.csv", index_col=0, header=0)
 
 #remove columns for genes that no models exist for
 external_predicted_TPM.drop(['SHOX', 'ZBED1'], axis = 1, inplace = True)
@@ -49,8 +49,6 @@ def create_pearsons_violin(results_df, title, file_title, figure_root = './figur
     savepath = f'{figure_root}/{file_title}'
 
     fig, ax = plt.subplots()
-
-    results_df['dataset'] = results_df.dataset.astype('category')
     
     ax = sns.violinplot(data = results_df, x = 'dataset', y="pearsons", hue = 'dataset', palette=palette)
     ax.set_ylabel('Pearsons R', fontsize = 15)
@@ -124,7 +122,7 @@ samplewise_df_list.append(get_correlations_df(external_actual_TPM, external_pred
 
 samplewise_correlations = pd.concat(samplewise_df_list, ignore_index = True)
 #create_pearsons_violin(results_df=samplewise_correlations, title = 'Samplewise Pearsons Correlations for TPM models', file_title='samplewise_pearsons_TPM')
-create_pearsons_violin(results_df=samplewise_correlations, title = 'Samplewise Pearsons Correlations for TPM models', file_title='samplewise_pearsons_TPM_iterations2')
+create_pearsons_violin(results_df=samplewise_correlations, title = 'Samplewise Pearsons Correlations for Reference models', file_title='samplewise_pearsons_Reference')
 #print('Finished Samplewise Calculations')
 
 genewise_df_list = []
@@ -135,64 +133,8 @@ genewise_df_list.append(get_correlations_df(external_actual_TPM, external_predic
 genewise_correlations = pd.concat(genewise_df_list, ignore_index=True)
 
 genewise_correlations.to_csv('temp_file.csv')
-create_pearsons_violin(results_df=genewise_correlations, title = 'Genewise Pearsons Correlations for TPM models', file_title = 'genewise_pearsons_TPM_iterations2')
+create_pearsons_violin(results_df=genewise_correlations, title = 'Genewise Pearsons Correlations for Reference models', file_title = 'genewise_pearsons_Reference')
 print('Finished Genewise Calculations')
-
-
-'''
-df_list = []
-temp_df = pd.DataFrame(columns = ['pearsons', 'dataset'])
-#test_pearsons = get_correlations(train_actual_TPM, train_predicted_TPM)
-temp_df['pearsons'] = get_correlations(train_actual_TPM, train_predicted_TPM)
-temp_df['dataset'] = 'train'
-
-df_list.append(temp_df)
-
-temp_df = pd.DataFrame(columns = ['pearsons', 'dataset'])
-#test_pearsons = get_correlations(train_actual_TPM, train_predicted_TPM)
-temp_df['pearsons'] = get_correlations(test_actual_TPM, test_predicted_TPM)
-temp_df['dataset'] = 'test'
-
-df_list.append(temp_df)
-
-temp_df = pd.DataFrame(columns = ['pearsons', 'dataset'])
-#test_pearsons = get_correlations(train_actual_TPM, train_predicted_TPM)
-temp_df['pearsons'] = get_correlations(external_actual_TPM, external_predicted_TPM)
-temp_df['dataset'] = 'external'
-
-
-results_df = pd.concat(df_list)
-
-print(results_df)
-print(results_df['dataset'].value_counts())
-
-
-print('Calculating samplewise pearsons for test dataset')
-df_list = []
-temp_df = pd.DataFrame(columns = ['pearsons', 'dataset'])
-for i in range(0, test_predicted_TPM.shape[0]):
-    temp_df.loc[i, "pearsons"] = scipy.stats.pearsonr(test_predicted_TPM.iloc[i, :], test_actual_TPM.iloc[i, :]).statistic
-    temp_df.loc[i, "dataset"] = 'Test'
-df_list.append(temp_df)
-
-print('Calculating samplewise pearsons for train dataset')
-temp_df = pd.DataFrame(columns = ['pearsons', 'dataset'])
-for i in range(0, train_predicted_TPM.shape[0]):
-    temp_df.loc[i, "pearsons"] = scipy.stats.pearsonr(train_predicted_TPM.iloc[i, :], train_actual_TPM.iloc[i, :]).statistic
-    temp_df.loc[i, "dataset"] = 'Train'
-df_list.append(temp_df)
-
-print('Calculating samplewise external for test dataset')
-temp_df = pd.DataFrame(columns = ['pearsons', 'dataset'])
-for i in range(0, external_predicted_TPM.shape[0]):
-    temp_df.loc[i, "pearsons"] = scipy.stats.pearsonr(external_actual_TPM.iloc[i, :], external_predicted_TPM.iloc[i, :]).statistic
-    temp_df.loc[i, "dataset"] = 'External'
-df_list.append(temp_df)
-
-
-results_df = pd.concat(df_list)
-print(results_df['dataset'].value_counts())
-'''
 
 
 #======================================================================
