@@ -1,12 +1,15 @@
 import torch
 import pandas as pd
 import numpy as np
+import os
+import sys
 
-from torch.utils.data import Dataset, DataLoader
+from torch.utils.data import DataLoader
 from torch import nn
 
-from gene_MSE_all_samples import gene_MSE_all_samples
-from customTFGE_dataset import CustomTFGE
+sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
+
+from model_building.customTFGE_dataset import CustomTFGE
 
 #define device
 device = torch.accelerator.current_accelerator().type if torch.accelerator.is_available() else "cpu"
@@ -22,10 +25,8 @@ def TF_subset(net, target_gene):
 #Load Datasets
 #---------------------------------------------------------------
 
-print('Loading Datasets')
-
-MODEL_ROOT = './models'
-DATA_ROOT = './data'
+MODEL_ROOT = '../models'
+DATA_ROOT = '../data'
 
 external_expressions = pd.read_csv(f'{DATA_ROOT}/Full data files/Liver_bulk_external.tsv', index_col = 0, sep = '\t')
 
@@ -94,6 +95,7 @@ test_actual = pd.DataFrame(columns=gene_expressions.columns)
 missing_models = []
 
 def reverse_log_transorm(tensor_to_transform):
+    #use torch method to reverse the Log(TPM+1) transform
     new_tensor = tensor_to_transform.expm1()
     return(new_tensor)
 
@@ -106,22 +108,29 @@ for target_gene in gene_expressions.columns:
     external_TFs = external_TF[TF_subset(net, target_gene)]
     TF_expression_subset = TF_expressions[TF_subset(net, target_gene)]
 
-
+    #only run external scoring if the target gene is in the external dataset
     if target_gene in external_expressions.columns:
         external_dataset = CustomTFGE(device, TF_expressions=external_TFs, gene_expressions=external_expressions, network = net, target_gene = target_gene)
         eval_dataloader = DataLoader(external_dataset, batch_size=len(external_dataset), shuffle=False)
 
+    #get original dataset, split into train and test
     original_dataset = CustomTFGE(device, TF_expressions=TF_expression_subset, gene_expressions=gene_expressions, network = net, target_gene = target_gene)
     train_dataset, test_dataset = torch.utils.data.random_split(original_dataset, [0.8, 0.2], generator=torch.Generator().manual_seed(42))
 
+    #make these dataloeader with a batch size the same as the number of samples (draw all at once)
     train_dataloader = DataLoader(train_dataset, batch_size=len(train_dataset), shuffle=True)
     test_dataloader = DataLoader(test_dataset, batch_size=len(test_dataset), shuffle=True)
 
-    model = torch.load(f"{MODEL_ROOT}/logTPM_models/{target_gene}_logTPM_model.pth", weights_only = False)
+    #load desired models
+    model = torch.load(f"{MODEL_ROOT}/pearsons_models/{target_gene}_TPM_model.pth", weights_only = False)
     
-
+    #put model in eval mode
     model.eval()
     with torch.no_grad():
+        #for each dataset then load the data (using same seed as training to get same train test split)
+        #get the predicted and actual score this way as easiest way to get values from the torch train test split
+
+        #only run if targt gene in external dataset
         if target_gene in external_expressions.columns:
             for batch, (X, y) in enumerate(eval_dataloader):     
                 #only if running log model reverse the transformation to make error metrics comparable
@@ -153,11 +162,11 @@ for target_gene in gene_expressions.columns:
                 test_actual[target_gene] = y.cpu()
 
 #train_actual.to_csv(f'{DATA_ROOT}/Train_dataset_actual_expressions.csv')
-train_predicted.to_csv(f'{DATA_ROOT}/Train_dataset_predicted_expressions_LOG.csv')
+train_predicted.to_csv(f'{DATA_ROOT}/Train_dataset_predicted_expressions_PEARSONS.csv')
 
 #test_actual.to_csv(f'{DATA_ROOT}/Test_dataset_actual_expressions.csv')
-test_predicted.to_csv(f'{DATA_ROOT}/Test_dataset_predicted_expressions_LOG.csv')
+test_predicted.to_csv(f'{DATA_ROOT}/Test_dataset_predicted_expressions_PEARSONS.csv')
 
-external_predicted.to_csv(f'{DATA_ROOT}/external_dataset_predicted_expressions_LOG.csv')
+external_predicted.to_csv(f'{DATA_ROOT}/external_dataset_predicted_expressions_PEARSONS.csv')
 
 

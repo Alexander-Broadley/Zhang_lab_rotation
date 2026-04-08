@@ -1,32 +1,46 @@
-#converting notebook into python file for easier running
+######################################################################
+# Import Packages
+######################################################################
 
 import os
 import torch
 from torch import nn
 from torch.utils.data import Dataset
 from torch.utils.data import DataLoader
-from torchvision import datasets, transforms
 from torch import tensor
 import matplotlib.pyplot as plt
-
 import numpy as np
 import pandas as pd
 
-#set seed for reproducibility 
-torch.manual_seed(1475460913)
+######################################################################
+# Import and define functions and objects
+######################################################################
 
 #import early stopping class
-from early_stopper import EarlyStopping
-
+from MML_model.model_building.early_stopper import EarlyStopping
+#import LEMBAS activation functions
+from MML_model.model_building.activation_functions import activation_function_map
 #import model
-from referenceModel import referenceModel
+from MML_model.model_building.simpleMMLModel import SimpleMMLModel
 #import MSE per batch calculator
-from gene_MSE_all_samples import gene_MSE_all_samples
+from MML_model.model_building.gene_MSE_all_samples import gene_MSE_all_samples
 #import function to train a single epoch
-from train_one_epoch import train_one_epoch
-
+from MML_model.model_building.train_one_epoch import train_one_epoch
 #import dataset object
-from customTFGE_dataset import CustomTFGE
+from MML_model.model_building.customTFGE_dataset import CustomTFGE
+
+#define function to subset transcription factors to only those that directly regulate the target gene
+def TF_subset(net, target_gene):
+    #simpler version as per discussion w/ Cheng
+    #returns all the TFs in the network that directly connect to the target gene
+    return(list(net['TF'][net['Gene'] == target_gene]))
+
+######################################################################
+# Initialisations and data loading
+######################################################################
+
+#set seed for reproducibility 
+torch.manual_seed(1475460913)
 
 #define device
 device = torch.accelerator.current_accelerator().type if torch.accelerator.is_available() else "cpu"
@@ -36,6 +50,7 @@ print(f"Using {device} device")
 DATA_ROOT = './data'
 
 print('Loading Datasets')
+
 #Load network
 net = pd.read_csv(f"{DATA_ROOT}/Full data files/network(full).tsv", sep='\t')
 #Load target gene expressions
@@ -52,28 +67,41 @@ network_tfs = set(net['TF'].unique())      # TFs
 network_genes = set(net['Gene'].unique())  # target genes
 network_nodes = network_tfs | network_genes
 
+#filter TF and gene expressions to only those in network
 TF_expressions = TF_expressions[[gene for gene in TF_expressions.columns if gene in list(network_nodes)]]
 gene_expressions = gene_expressions[[gene for gene in gene_expressions.columns if gene in list(network_nodes)]] 
 
-#define function to subset transcription factors to only those that directly regulate the target gene
-def TF_subset(net, target_gene):
-    #simpler version as per discussion w/ Cheng
-    #returns all the TFs in the network that directly connect to the target gene
-    return(list(net['TF'][net['Gene'] == target_gene]))
+######################################################################
+# Transform data
+######################################################################
 
+#add 1 then log transform TF and gene expression values
+TF_expressions = TF_expressions + 1
+TF_expressions = TF_expressions.apply(np.log10)
+
+#same to gene expressions
+gene_expressions = gene_expressions + 1
+gene_expressions = gene_expressions.apply(np.log10)
+
+######################################################################
+# Intialise hyperparameters
+######################################################################
 
 #define training parameters
 learning_rate = 1e-3
 #run 1 sample at a time, but run through each sample per training epoch
 batch_size = TF_expressions.shape[0]
 #max 100 epochs
-epochs =  100
+epochs = 100
 #initialize MSE loss function - same as LEMBAS
 loss_fn = nn.MSELoss()
 
-
 #create a results dataframe
 results_df = pd.DataFrame(index = gene_expressions.columns, columns = ['train_score', 'test_score', 'stopped_early'])
+
+######################################################################
+# Create model per target gene
+######################################################################
 
 #for the remaining code need to execute per target gene (per gene in gene_expressions)
 for target_gene in gene_expressions.columns:
@@ -88,14 +116,13 @@ for target_gene in gene_expressions.columns:
 
     train_dataset, test_dataset = torch.utils.data.random_split(dataset, [0.8, 0.2], generator=torch.Generator().manual_seed(42))
 
-    #this time activation function is a standard leaky ReLU
-    model = referenceModel(nn.LeakyReLU(0.01), TF_expression_subset.shape[1]).to(device)
+    model = nn.DataParallel(SimpleMMLModel(activation_function_map['MML'], TF_expression_subset.shape[1])).to(device)
 
     #initialise same optimiser as LEMBAS
     optimiser = torch.optim.Adam(model.parameters(), lr=learning_rate)
 
-    train_dataloader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
-    test_dataloader = DataLoader(test_dataset, batch_size=batch_size, shuffle=True)
+    train_dataloader = DataLoader(train_dataset, batch_size=batch_size, shuffle=False)
+    test_dataloader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False)
 
     for t in range(epochs):
         #print(f"Epoch {t+1}\n-------------------------------")
@@ -110,10 +137,9 @@ for target_gene in gene_expressions.columns:
             results_df.loc[target_gene, 'stopped_early'] = 1
             print(f"Early stopping at epoch {t+1}")
             break
-    
-    results_df.loc[target_gene, 'train_score'] = gene_MSE_all_samples(test_dataloader, model, loss_fn, target_gene)
-    results_df.loc[target_gene, 'test_score'] = gene_MSE_all_samples(train_dataloader, model, loss_fn, target_gene)
 
-    torch.save(model, f'models/reference_models/{target_gene}_ref_TPM_model.pth')
+    results_df.loc[target_gene, 'train_score'] = gene_MSE_all_samples(test_dataloader, model, loss_fn, target_gene, rev_log = True)
+    results_df.loc[target_gene, 'test_score'] = gene_MSE_all_samples(train_dataloader, model, loss_fn, target_gene, rev_log = True)
+    torch.save(model, f'models/LogTPM_models/{target_gene}_logTPM_model.pth')
 
-results_df.to_csv('data/reference_MSE_results.csv')
+results_df.to_csv('data/MSE_results_logTPM.csv')

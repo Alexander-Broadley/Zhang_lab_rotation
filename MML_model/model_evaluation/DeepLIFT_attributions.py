@@ -6,7 +6,7 @@ from captum.attr import visualization as viz
 import numpy as np
 import matplotlib.pyplot as plt
 
-from filter_dataset import filter_datasets
+from MML_model.model_building.filter_dataset import filter_datasets
 
 #adapted code from DEEPLIFT tutorial: https://medium.com/@pysquad/deeplift-explained-python-techniques-for-ai-transparency-93d7ca64832d
 

@@ -14,19 +14,19 @@ import pandas as pd
 torch.manual_seed(1475460913)
 
 #import early stopping class
-from early_stopper import EarlyStopping
+from MML_model.model_building.early_stopper import EarlyStopping
 
 #import LEMBAS activation functions
-from activation_functions import activation_function_map
+from MML_model.model_building.activation_functions import activation_function_map
 #import model
-from simpleMMLModel import SimpleMMLModel
+from MML_model.model_building.simpleMMLModel import SimpleMMLModel
 #import MSE per batch calculator
-from gene_MSE_all_samples import gene_MSE_all_samples
+from MML_model.model_building.gene_MSE_all_samples import gene_MSE_all_samples
 #import function to train a single epoch
-from train_one_epoch import train_one_epoch
+from MML_model.model_building.train_one_epoch import train_one_epoch
 
 #import dataset object
-from customTFGE_dataset import CustomTFGE
+from MML_model.model_building.customTFGE_dataset import CustomTFGE
 
 device = torch.accelerator.current_accelerator().type if torch.accelerator.is_available() else "cpu"
 print(f"Using {device} device")
@@ -71,7 +71,7 @@ epochs =  100 #12747 * 5
 #loss_fn = nn.MSELoss()
 
 #trying with new loss_fn
-from pearsons_loss import PearsonLoss
+from MML_model.model_building.pearsons_loss import PearsonLoss
 loss_fn = PearsonLoss()
 
 

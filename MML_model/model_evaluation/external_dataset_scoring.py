@@ -3,8 +3,8 @@ import torch
 from torch.utils.data import Dataset, DataLoader
 from torch import nn
 
-from gene_MSE_all_samples import gene_MSE_all_samples
-from customTFGE_dataset import CustomTFGE
+from MML_model.model_building.gene_MSE_all_samples import gene_MSE_all_samples
+from MML_model.model_building.customTFGE_dataset import CustomTFGE
 
 #define device
 device = torch.accelerator.current_accelerator().type if torch.accelerator.is_available() else "cpu"

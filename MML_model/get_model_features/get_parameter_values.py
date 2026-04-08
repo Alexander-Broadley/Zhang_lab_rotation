@@ -8,7 +8,7 @@ import pandas as pd
 import numpy as np
 from torch import nn
 
-from filter_dataset import filter_datasets
+from MML_model.model_building.filter_dataset import filter_datasets
 
 DATA_ROOT = './data'
 MODEL_ROOT = './models'
