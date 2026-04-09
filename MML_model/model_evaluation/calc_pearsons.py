@@ -10,7 +10,7 @@ DATA_ROOT = '../data'
 FIGURE_ROOT = './figures'
 
 #determines which set of models to use
-suffix = '_REFERENCE'
+suffix = '_PEARSONS'
 
 #======================================================================
 #load expressions datasets
@@ -39,6 +39,14 @@ test_actual_TPM = test_actual_TPM[test_predicted_TPM.columns]
 external_actual_TPM = external_actual_TPM[external_predicted_TPM.columns]
 
 print('Loaded Datasets')
+
+
+#remove columns for genes that no models exist for
+train_predicted_TPM = train_predicted_TPM.dropna(axis=1, how='all')
+train_actual_TPM = train_actual_TPM.dropna(axis=1, how='all')
+test_predicted_TPM = test_predicted_TPM.dropna(axis=1, how='all')
+test_actual_TPM = test_actual_TPM.dropna(axis=1, how='all')
+external_actual_TPM = external_actual_TPM.dropna(axis=1, how='all')
 
 #======================================================================
 #calculate sample wise correlation values
@@ -135,9 +143,9 @@ elif suffix == '_PEARSONS':
 
 print('Calculating Samplewise Correlations')
 samplewise_df_list = []
-samplewise_df_list.append(get_correlations_df(train_actual_TPM, train_predicted_TPM, dataset_label='Train', rowise = True))
-samplewise_df_list.append(get_correlations_df(test_actual_TPM, test_predicted_TPM, dataset_label='Test', rowise = True))
-samplewise_df_list.append(get_correlations_df(external_actual_TPM, external_predicted_TPM, dataset_label='External', rowise = True))
+samplewise_df_list.append(get_correlations_df(train_actual_TPM.iloc[:, 0:10], train_predicted_TPM.iloc[:, 0:10], dataset_label='Train', rowise = True))
+samplewise_df_list.append(get_correlations_df(test_actual_TPM.iloc[:, 0:10], test_predicted_TPM.iloc[:, 0:10], dataset_label='Test', rowise = True))
+samplewise_df_list.append(get_correlations_df(external_actual_TPM.iloc[:, 0:10], external_predicted_TPM.iloc[:, 0:10], dataset_label='External', rowise = True))
 
 samplewise_correlations = pd.concat(samplewise_df_list, ignore_index = True)
 #create_pearsons_violin(results_df=samplewise_correlations, title = 'Samplewise Pearsons Correlations for TPM models', file_title='samplewise_pearsons_TPM')
@@ -149,9 +157,9 @@ print('Finished Samplewise Calculations')
 
 print('Calculating Genewise Correlations')
 genewise_df_list = []
-genewise_df_list.append(get_correlations_df(train_actual_TPM, train_predicted_TPM, dataset_label='Train', rowise = False))
-genewise_df_list.append(get_correlations_df(test_actual_TPM, test_predicted_TPM, dataset_label='Test', rowise = False))
-genewise_df_list.append(get_correlations_df(external_actual_TPM, external_predicted_TPM, dataset_label='External', rowise = False))
+genewise_df_list.append(get_correlations_df(train_actual_TPM.iloc[:, 0:10], train_predicted_TPM.iloc[:, 0:10], dataset_label='Train', rowise = False))
+genewise_df_list.append(get_correlations_df(test_actual_TPM.iloc[:, 0:10], test_predicted_TPM.iloc[:, 0:10], dataset_label='Test', rowise = False))
+genewise_df_list.append(get_correlations_df(external_actual_TPM.iloc[:, 0:10], external_predicted_TPM.iloc[:, 0:10], dataset_label='External', rowise = False))
 
 genewise_correlations = pd.concat(genewise_df_list, ignore_index=True)
 

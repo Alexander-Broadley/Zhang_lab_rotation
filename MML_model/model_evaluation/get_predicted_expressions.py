@@ -102,7 +102,7 @@ def reverse_log_transorm(tensor_to_transform):
 #set to true if getting predicted expressions for a log model
 log_model = False
 
-for target_gene in gene_expressions.columns:
+for target_gene in gene_expressions.columns[0:10]:
     print(f'Generating scores for {target_gene} model')
 
     external_TFs = external_TF[TF_subset(net, target_gene)]
@@ -122,7 +122,7 @@ for target_gene in gene_expressions.columns:
     test_dataloader = DataLoader(test_dataset, batch_size=len(test_dataset), shuffle=False)
 
     #load desired models
-    model = torch.load(f"{MODEL_ROOT}/pearsons_models/{target_gene}_TPM_model.pth", weights_only = False)
+    model = torch.load(f"{MODEL_ROOT}/pearsons_rand_bias/{target_gene}_model.pth", weights_only = False)
     
     #put model in eval mode
     model.eval()
@@ -161,10 +161,10 @@ for target_gene in gene_expressions.columns:
                 test_predicted[target_gene] = model(X).cpu()
                 test_actual[target_gene] = y.cpu()
 
-#train_actual.to_csv(f'{DATA_ROOT}/Train_dataset_actual_expressions.csv')
+train_actual.to_csv(f'{DATA_ROOT}/Train_dataset_actual_expressions.csv')
 train_predicted.to_csv(f'{DATA_ROOT}/Train_dataset_predicted_expressions_PEARSONS.csv')
 
-#test_actual.to_csv(f'{DATA_ROOT}/Test_dataset_actual_expressions.csv')
+test_actual.to_csv(f'{DATA_ROOT}/Test_dataset_actual_expressions.csv')
 test_predicted.to_csv(f'{DATA_ROOT}/Test_dataset_predicted_expressions_PEARSONS.csv')
 
 external_predicted.to_csv(f'{DATA_ROOT}/external_dataset_predicted_expressions_PEARSONS.csv')

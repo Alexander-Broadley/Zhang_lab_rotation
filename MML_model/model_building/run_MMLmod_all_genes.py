@@ -77,12 +77,8 @@ epochs =  100 #12747 * 5
 from model_building.pearsons_loss import PearsonLoss
 loss_fn = PearsonLoss()
 
-
 #create a results dataframe
-results_df = pd.DataFrame(index = gene_expressions.columns, columns = ['train_score', 'test_score', 'stopped_early'])
-
-#read TPM results file to find those that didn't save (didn't early stop)
-results_df = pd.read_csv(f'{DATA_ROOT}/MSE_results_TPM.csv', index_col = 0, header = 0)
+results_df = pd.DataFrame(index = gene_expressions.columns, columns = ['train_loss', 'test_loss', 'stopped_early', 'in_features'])
 
 #for the remaining code need to execute per target gene (per gene in gene_expressions)
 for target_gene in gene_expressions.columns:
@@ -111,13 +107,14 @@ for target_gene in gene_expressions.columns:
     test_dataloader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False)
 
     for t in range(epochs):
-        print(f"Epoch {t+1}\n-------------------------------")
-        train_one_epoch(train_dataloader, model, loss_fn, optimiser)
+        
+        train_loss = train_one_epoch(train_dataloader, model, loss_fn, optimiser)
 
         test_loss = gene_MSE_all_samples(test_dataloader, model, loss_fn, target_gene)
         #print(f'Test MSE this epoch is: {test_loss}')
 
-        if t % 5 == 0:
+        if (t+1) % 5 == 0:
+            print(f"Epoch {t+1}\n-------------------------------")
             print(test_loss)
 
         early_stopping.check_early_stop(test_loss)
@@ -127,10 +124,10 @@ for target_gene in gene_expressions.columns:
             results_df.loc[target_gene, 'stopped_early'] = 1
             break
 
-    results_df.loc[target_gene, 'train_score'] = gene_MSE_all_samples(test_dataloader, model, loss_fn, target_gene)
-    results_df.loc[target_gene, 'test_score'] = gene_MSE_all_samples(train_dataloader, model, loss_fn, target_gene)
-    print(results_df.loc[target_gene, 'train_score'])
-    torch.save(model.state_dict(), f'../models/pearsons_rand_bias/{target_gene}_model.pth')
+    results_df.loc[target_gene, 'train_loss'] = train_loss
+    results_df.loc[target_gene, 'test_loss'] = test_loss
+    results_df.loc[target_gene, 'in_features'] = len(TF_expression_subset.columns)
+    torch.save(model, f'../models/pearsons_models/{target_gene}_model.pth')
 
-results_df.to_csv('../data/Pearsons_rand_bias_results.csv')
+results_df.to_csv('../data/PEARSONS_results.csv')
 
