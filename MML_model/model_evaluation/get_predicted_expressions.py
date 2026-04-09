@@ -118,8 +118,8 @@ for target_gene in gene_expressions.columns:
     train_dataset, test_dataset = torch.utils.data.random_split(original_dataset, [0.8, 0.2], generator=torch.Generator().manual_seed(42))
 
     #make these dataloeader with a batch size the same as the number of samples (draw all at once)
-    train_dataloader = DataLoader(train_dataset, batch_size=len(train_dataset), shuffle=True)
-    test_dataloader = DataLoader(test_dataset, batch_size=len(test_dataset), shuffle=True)
+    train_dataloader = DataLoader(train_dataset, batch_size=len(train_dataset), shuffle=False)
+    test_dataloader = DataLoader(test_dataset, batch_size=len(test_dataset), shuffle=False)
 
     #load desired models
     model = torch.load(f"{MODEL_ROOT}/pearsons_models/{target_gene}_TPM_model.pth", weights_only = False)

@@ -107,8 +107,8 @@ for target_gene in gene_expressions.columns:
     #initialise same optimiser as LEMBAS
     optimiser = torch.optim.Adam(model.parameters(), lr=learning_rate)
 
-    train_dataloader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
-    test_dataloader = DataLoader(test_dataset, batch_size=batch_size, shuffle=True)
+    train_dataloader = DataLoader(train_dataset, batch_size=batch_size, shuffle=False)
+    test_dataloader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False)
 
     for t in range(epochs):
         print(f"Epoch {t+1}\n-------------------------------")
