@@ -1,10 +1,17 @@
 import pandas as pd
 import torch
-from torch.utils.data import Dataset, DataLoader
+
+from torch.utils.data import DataLoader
 from torch import nn
 
-from MML_model.model_building.gene_MSE_all_samples import gene_MSE_all_samples
-from MML_model.model_building.customTFGE_dataset import CustomTFGE
+import sys
+import os
+sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
+
+from model_building.gene_MSE_all_samples import gene_MSE_all_samples
+from model_building.customTFGE_dataset import CustomTFGE
+from model_building.simpleMMLModel import SimpleMMLModel
+from model_building.activation_functions import activation_function_map
 
 #define device
 device = torch.accelerator.current_accelerator().type if torch.accelerator.is_available() else "cpu"
@@ -20,9 +27,8 @@ def TF_subset(net, target_gene):
 #Load Datasets
 #---------------------------------------------------------------
 
-MODEL_ROOT = './models'
-
-DATA_ROOT = './data'
+MODEL_ROOT = '../models'
+DATA_ROOT = '../data'
 external_expressions = pd.read_csv(f'{DATA_ROOT}/Full data files/Liver_bulk_external.tsv', index_col = 0, sep = '\t')
 
 #Load network
@@ -86,24 +92,20 @@ for target_gene in gene_expressions.columns:
     #print(f'Creating model for {target_gene}')
     TF_expression_subset = TF_expressions[TF_subset(net, target_gene)]
 
+    model = SimpleMMLModel(activation_function_map['MML'], TF_expression_subset.shape[1])
+    model.to(device)
+
     dataset = CustomTFGE(device, TF_expressions=TF_expression_subset, gene_expressions=gene_expressions, network = net, target_gene = target_gene)
-    
-    
+    #model = torch.load(f"{MODEL_ROOT}/pearsons_models/{target_gene}_TPM_model.pth", weights_only = False) 
     #shouldn't need this anymore - fixed model saving issue
     try:
-        model = torch.load(f"{MODEL_ROOT}/TPM_models/{target_gene}_TPM_model.pth", weights_only = False)
+        model.load_state_dict(torch.load(f"{MODEL_ROOT}/pearsons_models/{target_gene}_TPM_model.pth", weights_only = True))
+        #model = torch.load(f"{MODEL_ROOT}/pearsons_models/{target_gene}_TPM_model.pth", weights_only = False)
         eval_dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=False)
         results_df.loc[target_gene, 'external_set_score'] = gene_MSE_all_samples(eval_dataloader, model, loss_fn, target_gene, rev_log = True)
     except:
         missing_models.append(target_gene)
-        print(missing_models)
+        print(f'{target_gene} model is missing')
         pass
 
-results_df.to_csv('data/external_MSE_TPM.csv')
-
-'''
-print(results_df)
-print(missing_models)
-file1 = open(f'{DATA_ROOT}/missing_TPM_models.txt', 'w')
-file1.writelines(missing_models)
-file1.close()'''
+results_df.to_csv('data/external_MSE_PEARSONS.csv')

@@ -1,5 +1,6 @@
 #converting notebook into python file for easier running
 import os
+import sys
 import torch
 from torch import nn
 from torch.utils.data import Dataset
@@ -10,29 +11,31 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 
+sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
+
 #set seed for reproducibility 
 torch.manual_seed(1475460913)
 
 #import early stopping class
-from MML_model.model_building.early_stopper import EarlyStopping
+from model_building.early_stopper import EarlyStopping
 
 #import LEMBAS activation functions
-from MML_model.model_building.activation_functions import activation_function_map
+from model_building.activation_functions import activation_function_map
 #import model
-from MML_model.model_building.simpleMMLModel import SimpleMMLModel
+from model_building.simpleMMLModel import SimpleMMLModel
 #import MSE per batch calculator
-from MML_model.model_building.gene_MSE_all_samples import gene_MSE_all_samples
+from model_building.gene_MSE_all_samples import gene_MSE_all_samples
 #import function to train a single epoch
-from MML_model.model_building.train_one_epoch import train_one_epoch
+from model_building.train_one_epoch import train_one_epoch
 
 #import dataset object
-from MML_model.model_building.customTFGE_dataset import CustomTFGE
+from model_building.customTFGE_dataset import CustomTFGE
 
 device = torch.accelerator.current_accelerator().type if torch.accelerator.is_available() else "cpu"
 print(f"Using {device} device")
 
 #define root directory
-DATA_ROOT = './data'
+DATA_ROOT = '../data'
 
 print('Loading Datasets')
 #Load network
@@ -71,7 +74,7 @@ epochs =  100 #12747 * 5
 #loss_fn = nn.MSELoss()
 
 #trying with new loss_fn
-from MML_model.model_building.pearsons_loss import PearsonLoss
+from model_building.pearsons_loss import PearsonLoss
 loss_fn = PearsonLoss()
 
 
@@ -127,7 +130,7 @@ for target_gene in gene_expressions.columns:
     results_df.loc[target_gene, 'train_score'] = gene_MSE_all_samples(test_dataloader, model, loss_fn, target_gene)
     results_df.loc[target_gene, 'test_score'] = gene_MSE_all_samples(train_dataloader, model, loss_fn, target_gene)
     print(results_df.loc[target_gene, 'train_score'])
-    torch.save(model, f'./models/pearsons_models/{target_gene}_TPM_model.pth')
+    torch.save(model.state_dict(), f'../models/pearsons_rand_bias/{target_gene}_model.pth')
 
-results_df.to_csv('data/Pearsons_results.csv')
+results_df.to_csv('../data/Pearsons_rand_bias_results.csv')
 
