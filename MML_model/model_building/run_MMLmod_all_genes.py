@@ -80,11 +80,22 @@ loss_fn = PearsonLoss()
 #create a results dataframe
 results_df = pd.DataFrame(index = gene_expressions.columns, columns = ['train_loss', 'test_loss', 'stopped_early', 'in_features'])
 
+#create dataframes to track the predicted and actual expressions for train and test datasets - recreating datasets with pytorch is unreliable and cannot store 161000 datasets
+
+#intialise training dataset predicted values df
+train_predicted = pd.DataFrame(columns=gene_expressions.columns)
+test_predicted = pd.DataFrame(columns=gene_expressions.columns)
+
+#initialise training dataset actual values df - easier to do it this way as can get values after torch train-test split
+train_actual = pd.DataFrame(columns=gene_expressions.columns)
+test_actual = pd.DataFrame(columns=gene_expressions.columns)
+
+
 #for the remaining code need to execute per target gene (per gene in gene_expressions)
 for target_gene in gene_expressions.columns:
     print(target_gene)
     #initialise an early stopper to end training if loss on test data does not fall by at least 0.01 MSE for 3 eopochs in a row
-    early_stopping = EarlyStopping(patience=3, delta=0.02, verbose=True)
+    early_stopping = EarlyStopping(patience=3, delta=0.01, verbose=True)
     
     #print(f'Creating model for {target_gene}')
     TF_expression_subset = TF_expressions[TF_subset(net, target_gene)]
@@ -124,10 +135,32 @@ for target_gene in gene_expressions.columns:
             results_df.loc[target_gene, 'stopped_early'] = 1
             break
 
+     #put model in eval mode
+    model.eval()
+    with torch.no_grad():
+        #for each dataset then load the data (using same seed as training to get same train test split)
+        #get the predicted and actual score this way as easiest way to get values from the torch train test split
+        for batch, (X, y) in enumerate(train_dataloader):
+            train_predicted[target_gene] = model(X).cpu()
+            train_actual[target_gene] = y.cpu()
+
+        for batch, (X, y) in enumerate(test_dataloader):
+            test_predicted[target_gene] = model(X).cpu()
+            test_actual[target_gene] = y.cpu()
+
     results_df.loc[target_gene, 'train_loss'] = train_loss
     results_df.loc[target_gene, 'test_loss'] = test_loss
     results_df.loc[target_gene, 'in_features'] = len(TF_expression_subset.columns)
     torch.save(model, f'../models/pearsons_models/{target_gene}_model.pth')
+
+
+
+train_actual.to_csv(f'{DATA_ROOT}/Train_dataset_actual_expressions.csv')
+train_predicted.to_csv(f'{DATA_ROOT}/Train_dataset_predicted_expressions_PEARSONS.csv')
+
+test_actual.to_csv(f'{DATA_ROOT}/Test_dataset_actual_expressions.csv')
+test_predicted.to_csv(f'{DATA_ROOT}/Test_dataset_predicted_expressions_PEARSONS.csv')
+
 
 results_df.to_csv('../data/PEARSONS_results.csv')
 

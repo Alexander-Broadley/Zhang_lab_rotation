@@ -143,9 +143,9 @@ elif suffix == '_PEARSONS':
 
 print('Calculating Samplewise Correlations')
 samplewise_df_list = []
-samplewise_df_list.append(get_correlations_df(train_actual_TPM.iloc[:, 0:10], train_predicted_TPM.iloc[:, 0:10], dataset_label='Train', rowise = True))
-samplewise_df_list.append(get_correlations_df(test_actual_TPM.iloc[:, 0:10], test_predicted_TPM.iloc[:, 0:10], dataset_label='Test', rowise = True))
-samplewise_df_list.append(get_correlations_df(external_actual_TPM.iloc[:, 0:10], external_predicted_TPM.iloc[:, 0:10], dataset_label='External', rowise = True))
+samplewise_df_list.append(get_correlations_df(train_actual_TPM, train_predicted_TPM, dataset_label='Train', rowise = True))
+samplewise_df_list.append(get_correlations_df(test_actual_TPM, test_predicted_TPM, dataset_label='Test', rowise = True))
+samplewise_df_list.append(get_correlations_df(external_actual_TPM, external_predicted_TPM, dataset_label='External', rowise = True))
 
 samplewise_correlations = pd.concat(samplewise_df_list, ignore_index = True)
 #create_pearsons_violin(results_df=samplewise_correlations, title = 'Samplewise Pearsons Correlations for TPM models', file_title='samplewise_pearsons_TPM')
@@ -157,13 +157,12 @@ print('Finished Samplewise Calculations')
 
 print('Calculating Genewise Correlations')
 genewise_df_list = []
-genewise_df_list.append(get_correlations_df(train_actual_TPM.iloc[:, 0:10], train_predicted_TPM.iloc[:, 0:10], dataset_label='Train', rowise = False))
-genewise_df_list.append(get_correlations_df(test_actual_TPM.iloc[:, 0:10], test_predicted_TPM.iloc[:, 0:10], dataset_label='Test', rowise = False))
-genewise_df_list.append(get_correlations_df(external_actual_TPM.iloc[:, 0:10], external_predicted_TPM.iloc[:, 0:10], dataset_label='External', rowise = False))
+genewise_df_list.append(get_correlations_df(train_actual_TPM, train_predicted_TPM, dataset_label='Train', rowise = False))
+genewise_df_list.append(get_correlations_df(test_actual_TPM, test_predicted_TPM, dataset_label='Test', rowise = False))
+genewise_df_list.append(get_correlations_df(external_actual_TPM, external_predicted_TPM, dataset_label='External', rowise = False))
 
 genewise_correlations = pd.concat(genewise_df_list, ignore_index=True)
 
-genewise_correlations.to_csv('temp_file.csv')
 create_pearsons_violin(results_df=genewise_correlations, y_col='pearsons', title = f'Genewise Pearsons Correlations for {title_keyword} models', file_title = f'genewise_pearsons{suffix}')
 create_pearsons_violin(results_df=genewise_correlations, y_col='spearmans', title = f'Genewise Spearmans Correlations for {title_keyword} models', file_title = f'genewise_spearmans{suffix}')
 create_pearsons_violin(results_df=genewise_correlations, y_col='MSE', title = f'Genewise MSE for {title_keyword} models', file_title = f'genewise_MSE{suffix}')
