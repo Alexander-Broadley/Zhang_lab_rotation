@@ -73,6 +73,14 @@ external_genes = external_expressions[[gene for gene in list(external_expression
 external_TF = external_TF[[gene for gene in external_TF.columns if gene in list(network_nodes)]]
 external_genes = external_genes[[gene for gene in external_genes.columns if gene in list(network_nodes)]] 
 
+#intialise training dataset predicted values df  - easier to do it this way as can get values after torch train-test split
+train_predicted = pd.DataFrame(columns=gene_expressions.columns)
+test_predicted = pd.DataFrame(columns=gene_expressions.columns)
+
+#initialise training dataset actual values df
+train_actual = pd.DataFrame(columns=gene_expressions.columns)
+test_actual = pd.DataFrame(columns=gene_expressions.columns)
+
 #---------------------------------------------------------------
 #load models per target gene
 #---------------------------------------------------------------
@@ -85,12 +93,12 @@ loss_fn = nn.MSELoss()
 external_predicted = pd.DataFrame(index = external_expressions.index, columns= external_expressions.columns)
 
 #intialise training dataset predicted values df
-train_predicted = pd.DataFrame(columns=gene_expressions.columns)
-test_predicted = pd.DataFrame(columns=gene_expressions.columns)
+#train_predicted = pd.DataFrame(columns=gene_expressions.columns)
+#test_predicted = pd.DataFrame(columns=gene_expressions.columns)
 
 #initialise training dataset actual values df - easier to do it this way as can get values after torch train-test split
-train_actual = pd.DataFrame(columns=gene_expressions.columns)
-test_actual = pd.DataFrame(columns=gene_expressions.columns)
+#train_actual = pd.DataFrame(columns=gene_expressions.columns)
+#test_actual = pd.DataFrame(columns=gene_expressions.columns)
 
 missing_models = []
 
@@ -113,14 +121,6 @@ for target_gene in gene_expressions.columns:
         external_dataset = CustomTFGE(device, TF_expressions=external_TFs, gene_expressions=external_expressions, network = net, target_gene = target_gene)
         eval_dataloader = DataLoader(external_dataset, batch_size=len(external_dataset), shuffle=False)
 
-    #get original dataset, split into train and test
-    original_dataset = CustomTFGE(device, TF_expressions=TF_expression_subset, gene_expressions=gene_expressions, network = net, target_gene = target_gene)
-    train_dataset, test_dataset = torch.utils.data.random_split(original_dataset, [0.8, 0.2], generator=torch.Generator().manual_seed(42))
-
-    #make these dataloeader with a batch size the same as the number of samples (draw all at once)
-    train_dataloader = DataLoader(train_dataset, batch_size=len(train_dataset), shuffle=False)
-    test_dataloader = DataLoader(test_dataset, batch_size=len(test_dataset), shuffle=False)
-
     #load desired models
     model = torch.load(f"{MODEL_ROOT}/pearsons_models/{target_gene}_model.pth", weights_only = False)
     
@@ -139,33 +139,8 @@ for target_gene in gene_expressions.columns:
                     external_predicted[target_gene] = reverse_log_transorm(model(X)).cpu()
                 else:
                     external_predicted[target_gene] = model(X).cpu()
-            
-        for batch, (X, y) in enumerate(train_dataloader):
-            
-             #only if running log model reverse the transformation to make error metrics comparable
-            if log_model == True:
-                train_predicted[target_gene] = reverse_log_transorm(model(X)).cpu()
-                train_actual[target_gene] = y.cpu()
 
-            else:
-                train_predicted[target_gene] = model(X).cpu()
-                train_actual[target_gene] = y.cpu()
-
-
-        for batch, (X, y) in enumerate(test_dataloader):
-             #only if running log model reverse the transformation to make error metrics comparable
-            if log_model == True:
-                test_predicted[target_gene] = reverse_log_transorm(model(X)).cpu()
-                test_actual[target_gene] = y.cpu()
-            else:
-                test_predicted[target_gene] = model(X).cpu()
-                test_actual[target_gene] = y.cpu()
-
-train_actual.to_csv(f'{DATA_ROOT}/Train_dataset_actual_expressions.csv')
-train_predicted.to_csv(f'{DATA_ROOT}/Train_dataset_predicted_expressions_PEARSONS.csv')
-
-test_actual.to_csv(f'{DATA_ROOT}/Test_dataset_actual_expressions.csv')
-test_predicted.to_csv(f'{DATA_ROOT}/Test_dataset_predicted_expressions_PEARSONS.csv')
+    
 
 external_predicted.to_csv(f'{DATA_ROOT}/external_dataset_predicted_expressions_PEARSONS.csv')
 

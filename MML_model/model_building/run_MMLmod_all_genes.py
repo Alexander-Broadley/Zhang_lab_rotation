@@ -75,7 +75,8 @@ epochs =  100 #12747 * 5
 
 #trying with new loss_fn
 from model_building.pearsons_loss import PearsonLoss
-loss_fn = PearsonLoss()
+#loss_fn = PearsonLoss()
+loss_fn = nn.MSELoss()
 
 #create a results dataframe
 results_df = pd.DataFrame(index = gene_expressions.columns, columns = ['train_loss', 'test_loss', 'stopped_early', 'in_features'])
@@ -148,10 +149,23 @@ for target_gene in gene_expressions.columns:
             test_predicted[target_gene] = model(X).cpu()
             test_actual[target_gene] = y.cpu()
 
+     #put model in eval mode
+    model.eval()
+    with torch.no_grad():
+        #for each dataset then load the data (using same seed as training to get same train test split)
+        #get the predicted and actual score this way as easiest way to get values from the torch train test split
+        for batch, (X, y) in enumerate(train_dataloader):
+            train_predicted[target_gene] = model(X).cpu()
+            train_actual[target_gene] = y.cpu()
+
+        for batch, (X, y) in enumerate(test_dataloader):
+            test_predicted[target_gene] = model(X).cpu()
+            test_actual[target_gene] = y.cpu()
+
     results_df.loc[target_gene, 'train_loss'] = train_loss
     results_df.loc[target_gene, 'test_loss'] = test_loss
     results_df.loc[target_gene, 'in_features'] = len(TF_expression_subset.columns)
-    torch.save(model, f'../models/pearsons_models/{target_gene}_model.pth')
+    torch.save(model, f'../models/MSE_models/{target_gene}_model.pth')
 
 
 

@@ -1,7 +1,8 @@
 import seaborn as sns
 import matplotlib.pyplot as plt
+import inspect
 
-def create_pearsons_violin(results_df, y_col, title, file_title, figure_root = './figures'):
+def create_pearsons_violin(results_df, y_col, title, file_title, figure_root = './figures', **kwargs):
     '''
     Taking a results df with two columns ['pearsons', 'dataset'] 
     Plots the pearsons values by dataset of origin as violin plots and saves figure with specified file_title at figure_root
@@ -24,31 +25,36 @@ def create_pearsons_violin(results_df, y_col, title, file_title, figure_root = '
     None
         Saves figure to desired location
     '''
-    palette = 'viridis'
+
+    #store all plot formating arguments in dictionary - kwargs can then override
+    plot_defaults = {'ylim':(-1, 1),
+                     'palette':'viridis'}
+
+    plot_kwargs = {**plot_defaults, **kwargs}
+
+    #violin_plot_arguments = list(inspect.signature(sns.violinplot).parameters.keys())
 
     savepath = f'{figure_root}/{file_title}'
 
     fig, ax = plt.subplots()
     
-    ax = sns.violinplot(data = results_df, x = 'dataset', y= y_col, hue = 'dataset', palette=palette)
+    ax = sns.violinplot(data = results_df, x = 'dataset', y= y_col, hue = 'dataset', palette=plot_kwargs['palette'])
 
     if y_col == 'pearsons':
         ax.set_ylabel('Pearsons R', fontsize = 15)
     elif y_col == 'spearmans':
         ax.set_ylabel('Spearmans Rank', fontsize = 15)
     ax.set_xlabel('Dataset', fontsize = 15)
-    #fig.canvas.draw()
-    #labels = [item.get_text() for item in ax.get_xticklabels()]
-    #labels[0], labels[1], labels[2] = ['Training', 'Test', 'External']
-    #ax.set_xticklabels(['Training', 'Test', 'External'], fontsize = 10)
+   
+    plt.ylim(plot_kwargs['ylim'])
     fig.suptitle(title, fontsize = 20)
     plt.savefig(savepath, dpi = 300, bbox_inches = 'tight')
 
-def feature_error_scatter(df, y_col, x_col, hue_col, x_label, y_label, title, file_title, figure_root = './figures', palette = 'icefire'):
+def feature_error_scatter(df, y_col, x_col, hue_col, x_label, y_label, title, file_title, figure_root = './figures', palette = 'icefire', **plot_kwargs):
     '''
     Creates a scatter plot where points are coloured by a third column. Original intended use was for two error scores against model size.
     '''
-    
+    print(**plot_kwargs)
     fig, ax = plt.subplots()
 
     #ensures that legend is coloured by order of hue_col values
