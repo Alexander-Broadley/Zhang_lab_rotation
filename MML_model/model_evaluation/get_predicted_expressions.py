@@ -102,7 +102,7 @@ def reverse_log_transorm(tensor_to_transform):
 #set to true if getting predicted expressions for a log model
 log_model = False
 
-for target_gene in gene_expressions.columns[0:10]:
+for target_gene in gene_expressions.columns:
     print(f'Generating scores for {target_gene} model')
 
     external_TFs = external_TF[TF_subset(net, target_gene)]
@@ -122,7 +122,7 @@ for target_gene in gene_expressions.columns[0:10]:
     test_dataloader = DataLoader(test_dataset, batch_size=len(test_dataset), shuffle=False)
 
     #load desired models
-    model = torch.load(f"{MODEL_ROOT}/pearsons_rand_bias/{target_gene}_model.pth", weights_only = False)
+    model = torch.load(f"{MODEL_ROOT}/pearsons_models/{target_gene}_model.pth", weights_only = False)
     
     #put model in eval mode
     model.eval()
