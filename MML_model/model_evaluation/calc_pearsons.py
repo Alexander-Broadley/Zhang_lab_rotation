@@ -149,9 +149,9 @@ samplewise_df_list.append(get_correlations_df(external_actual_TPM, external_pred
 
 samplewise_correlations = pd.concat(samplewise_df_list, ignore_index = True)
 #create_pearsons_violin(results_df=samplewise_correlations, title = 'Samplewise Pearsons Correlations for TPM models', file_title='samplewise_pearsons_TPM')
-create_pearsons_violin(results_df=samplewise_correlations, y_col='pearsons', title = f'Samplewise Pearsons Correlations for {title_keyword} models', file_title= f'samplewise_pearsons{suffix}')
-create_pearsons_violin(results_df=samplewise_correlations, y_col='spearmans', title = f'Samplewise Spearmans Correlations for {title_keyword} models', file_title=f'samplewise_spearmans{suffix}')
-create_pearsons_violin(results_df=samplewise_correlations, y_col='MSE', title = f'Samplewise MSE for {title_keyword} models', file_title=f'samplewise_MSE{suffix}')
+create_pearsons_violin(results_df=samplewise_correlations, y_col='pearsons', title = f'Samplewise Pearsons Correlations for {title_keyword} models', file_title= f'samplewise_pearsons{suffix}', figure_root=f'./figures/{suffix}_figures')
+create_pearsons_violin(results_df=samplewise_correlations, y_col='spearmans', title = f'Samplewise Spearmans Correlations for {title_keyword} models', file_title=f'samplewise_spearmans{suffix}', figure_root=f'./figures/{suffix}_figures')
+create_pearsons_violin(results_df=samplewise_correlations, y_col='MSE', title = f'Samplewise MSE for {title_keyword} models', file_title=f'samplewise_MSE{suffix}', figure_root=f'./figures/{suffix}_figures')
 
 print('Finished Samplewise Calculations')
 
@@ -163,9 +163,9 @@ genewise_df_list.append(get_correlations_df(external_actual_TPM, external_predic
 
 genewise_correlations = pd.concat(genewise_df_list, ignore_index=True)
 
-create_pearsons_violin(results_df=genewise_correlations, y_col='pearsons', title = f'Genewise Pearsons Correlations for {title_keyword} models', file_title = f'genewise_pearsons{suffix}')
-create_pearsons_violin(results_df=genewise_correlations, y_col='spearmans', title = f'Genewise Spearmans Correlations for {title_keyword} models', file_title = f'genewise_spearmans{suffix}')
-create_pearsons_violin(results_df=genewise_correlations, y_col='MSE', title = f'Genewise MSE for {title_keyword} models', file_title = f'genewise_MSE{suffix}')
+create_pearsons_violin(results_df=genewise_correlations, y_col='pearsons', title = f'Genewise Pearsons Correlations for {title_keyword} models', file_title = f'genewise_pearsons{suffix}', figure_root=f'./figures/{suffix}_figures')
+create_pearsons_violin(results_df=genewise_correlations, y_col='spearmans', title = f'Genewise Spearmans Correlations for {title_keyword} models', file_title = f'genewise_spearmans{suffix}', figure_root=f'./figures/{suffix}_figures')
+create_pearsons_violin(results_df=genewise_correlations, y_col='MSE', title = f'Genewise MSE for {title_keyword} models', file_title = f'genewise_MSE{suffix}', figure_root=f'./figures/{suffix}_figures')
 print('Finished Genewise Calculations')
 
 
