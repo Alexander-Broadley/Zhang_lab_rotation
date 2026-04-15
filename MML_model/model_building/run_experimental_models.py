@@ -38,7 +38,7 @@ print(f"Using {device} device")
 DATA_ROOT = '../data'
 
 #get low scoring models to assess improvements
-current_results = pd.read_csv(f'{DATA_ROOT}/Pearsons_results.csv', index_col = 0, header = 0)
+current_results = pd.read_csv(f'{DATA_ROOT}/Pearsons_results_ACC.csv', index_col = 0, header = 0)
 
 low_scoring_models = list(current_results[current_results['train_loss'] > 1].index)
 
@@ -74,7 +74,7 @@ learning_rate = 1e-3
 #run 1 sample at a time, but run through each sample per training epoch
 batch_size = TF_expressions.shape[0]
 #max 100 epochs
-epochs =  100 #12747 * 5
+epochs =  200 #12747 * 5
 #initialize MSE loss function - same as LEMBAS
 #loss_fn = nn.MSELoss()
 
@@ -87,76 +87,79 @@ results_df = pd.DataFrame(columns = ['train_loss', 'test_loss', 'stopped_early',
 
 #create dataframes to track the predicted and actual expressions for train and test datasets - recreating datasets with pytorch is unreliable and cannot store 161000 datasets
 
+
 #intialise training dataset predicted values df
-train_predicted = pd.DataFrame(columns=gene_expressions.columns)
-test_predicted = pd.DataFrame(columns=gene_expressions.columns)
+train_predicted = pd.DataFrame(columns = gene_expressions.columns)
+test_predicted = pd.DataFrame(columns = gene_expressions.columns)
 
 #initialise training dataset actual values df - easier to do it this way as can get values after torch train-test split
-train_actual = pd.DataFrame(columns=gene_expressions.columns)
-test_actual = pd.DataFrame(columns=gene_expressions.columns)
-
+train_actual = pd.DataFrame(columns = gene_expressions.columns)
+test_actual = pd.DataFrame(columns = gene_expressions.columns)
 
 #for the remaining code need to execute per target gene (per gene in gene_expressions)
-for target_gene in gene_expressions[low_scoring_models]:
-    print(target_gene)
-    #initialise an early stopper to end training if loss on test data does not fall by at least 0.01 MSE for 3 eopochs in a row
-    early_stopping = EarlyStopping(patience=3, delta=0.01, verbose=True)
-    
-    #print(f'Creating model for {target_gene}')
-    TF_expression_subset = TF_expressions[TF_subset(net, target_gene)]
-
-    dataset = CustomTFGE(device, TF_expressions=TF_expression_subset, gene_expressions=gene_expressions, network = net, target_gene = target_gene)
-
-    train_dataset, test_dataset = torch.utils.data.random_split(dataset, [0.8, 0.2], generator=torch.Generator().manual_seed(42))
-
-    model = SimpleMMLModel(activation_function_map['MML'], TF_expression_subset.shape[1])
-
-    if torch.cuda.device_count() > 1:
-        model = nn.DataParallel(model)
-
-    model.to(device)
-
-    #initialise same optimiser as LEMBAS
-    optimiser = torch.optim.Adam(model.parameters(), lr=learning_rate)
-
-    train_dataloader = DataLoader(train_dataset, batch_size=batch_size, shuffle=False)
-    test_dataloader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False)
-
-    for t in range(epochs):
+for target_gene in gene_expressions[low_scoring_models].columns:
+    if target_gene == 'DAW1':
+        pass
+    else:
+        print(target_gene)
+        #initialise an early stopper to end training if loss on test data does not fall by at least 0.01 MSE for 3 eopochs in a row
+        early_stopping = EarlyStopping(patience=3, delta=0.01, verbose=True)
         
-        train_loss = train_one_epoch(train_dataloader, model, loss_fn, optimiser)
+        #print(f'Creating model for {target_gene}')
+        TF_expression_subset = TF_expressions[TF_subset(net, target_gene)]
 
-        test_loss = gene_MSE_all_samples(test_dataloader, model, loss_fn, target_gene)
-        #print(f'Test MSE this epoch is: {test_loss}')
+        dataset = CustomTFGE(device, TF_expressions=TF_expression_subset, gene_expressions=gene_expressions, network = net, target_gene = target_gene)
 
-        if (t+1) % 5 == 0:
-            print(f"Epoch {t+1}\n-------------------------------")
-            print(test_loss)
+        train_dataset, test_dataset = torch.utils.data.random_split(dataset, [0.8, 0.2], generator=torch.Generator().manual_seed(42))
 
-        early_stopping.check_early_stop(test_loss)
-    
-        if early_stopping.stop_training:
-            print(f"Early stopping at epoch {t+1}")  
-            results_df.loc[target_gene, 'stopped_early'] = 1
-            break
+        model = SimpleMMLModel(activation_function_map['MML'], TF_expression_subset.shape[1])
 
-     #put model in eval mode
-    model.eval()
-    with torch.no_grad():
-        #for each dataset then load the data (using same seed as training to get same train test split)
-        #get the predicted and actual score this way as easiest way to get values from the torch train test split
-        for batch, (X, y) in enumerate(train_dataloader):
-            train_predicted[target_gene] = model(X).cpu()
-            train_actual[target_gene] = y.cpu()
+        if torch.cuda.device_count() > 1:
+            model = nn.DataParallel(model)
 
-        for batch, (X, y) in enumerate(test_dataloader):
-            test_predicted[target_gene] = model(X).cpu()
-            test_actual[target_gene] = y.cpu()
+        model.to(device)
 
-    results_df.loc[target_gene, 'train_loss'] = train_loss
-    results_df.loc[target_gene, 'test_loss'] = test_loss
-    results_df.loc[target_gene, 'in_features'] = len(TF_expression_subset.columns)
-    torch.save(model, f'../models/experimental_models/{target_gene}_model.pth')
+        #initialise same optimiser as LEMBAS
+        optimiser = torch.optim.Adam(model.parameters(), lr=learning_rate)
+
+        train_dataloader = DataLoader(train_dataset, batch_size=batch_size, shuffle=False)
+        test_dataloader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False)
+
+        for t in range(epochs):
+            
+            train_loss = train_one_epoch(train_dataloader, model, loss_fn, optimiser)
+
+            test_loss = gene_MSE_all_samples(test_dataloader, model, loss_fn, target_gene)
+            #print(f'Test MSE this epoch is: {test_loss}')
+
+            if (t+1) % 5 == 0:
+                print(f"Epoch {t+1}\n-------------------------------")
+                print(test_loss)
+
+            early_stopping.check_early_stop(test_loss)
+        
+            if early_stopping.stop_training:
+                print(f"Early stopping at epoch {t+1}")  
+                results_df.loc[target_gene, 'stopped_early'] = 1
+                break
+
+        #put model in eval mode
+        model.eval()
+        with torch.no_grad():
+            #for each dataset then load the data (using same seed as training to get same train test split)
+            #get the predicted and actual score this way as easiest way to get values from the torch train test split
+            for batch, (X, y) in enumerate(train_dataloader):
+                train_predicted[target_gene] = model(X).cpu()
+                train_actual[target_gene] = y.cpu()
+
+            for batch, (X, y) in enumerate(test_dataloader):
+                test_predicted[target_gene] = model(X).cpu()
+                test_actual[target_gene] = y.cpu()
+
+        results_df.loc[target_gene, 'train_loss'] = train_loss
+        results_df.loc[target_gene, 'test_loss'] = test_loss
+        results_df.loc[target_gene, 'in_features'] = len(TF_expression_subset.columns)
+        torch.save(model, f'../models/experimental_models/{target_gene}_model.pth')
 
 
 

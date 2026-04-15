@@ -58,7 +58,7 @@ def feature_error_scatter(df, y_col, x_col, hue_col, x_label, y_label, title, fi
     fig, ax = plt.subplots()
 
     #ensures that legend is coloured by order of hue_col values
-    sorted_results = df.sort_values('hue_col')
+    sorted_results = df.sort_values(hue_col)
     
     sns.scatterplot(data=sorted_results, x = x_col, y = y_col, legend=True, ax = ax, hue = hue_col, palette=palette, s=10)
     sns.move_legend(ax, "upper left", bbox_to_anchor=(1, 1))
@@ -66,4 +66,4 @@ def feature_error_scatter(df, y_col, x_col, hue_col, x_label, y_label, title, fi
     ax.set_xlabel(x_label, fontsize = 10)
     ax.set_ylabel(y_label, fontsize = 10)
     fig.suptitle(title)
-    plt.savefig(f'{figure_root}/file_title', bbox_inches='tight')
+    plt.savefig(f'{figure_root}/{file_title}', bbox_inches='tight')

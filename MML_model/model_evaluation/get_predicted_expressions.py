@@ -122,7 +122,7 @@ for target_gene in gene_expressions.columns:
         eval_dataloader = DataLoader(external_dataset, batch_size=len(external_dataset), shuffle=False)
 
     #load desired models
-    model = torch.load(f"{MODEL_ROOT}/pearsons_models/{target_gene}_model.pth", weights_only = False)
+    model = torch.load(f"{MODEL_ROOT}/MSE_models/{target_gene}_model.pth", weights_only = False)
     
     #put model in eval mode
     model.eval()
