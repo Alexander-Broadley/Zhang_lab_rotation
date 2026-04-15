@@ -38,7 +38,7 @@ print(f"Using {device} device")
 DATA_ROOT = '../data'
 
 #get low scoring models to assess improvements
-current_results = pd.read_csv(f'{DATA_ROOT}/Pearsons_results_ACC.csv', index_col = 0, header = 0)
+current_results = pd.read_csv(f'{DATA_ROOT}/PEARSONS_results.csv', index_col = 0, header = 0)
 
 low_scoring_models = list(current_results[current_results['train_loss'] > 1].index)
 
@@ -97,13 +97,32 @@ train_actual = pd.DataFrame(columns = gene_expressions.columns)
 test_actual = pd.DataFrame(columns = gene_expressions.columns)
 
 #for the remaining code need to execute per target gene (per gene in gene_expressions)
-for target_gene in gene_expressions[low_scoring_models].columns:
-    if target_gene == 'DAW1':
-        pass
-    else:
-        print(target_gene)
-        #initialise an early stopper to end training if loss on test data does not fall by at least 0.01 MSE for 3 eopochs in a row
-        early_stopping = EarlyStopping(patience=3, delta=0.01, verbose=True)
+for target_gene in gene_expressions[low_scoring_models]:
+    print(target_gene)
+    #initialise an early stopper to end training if loss on test data does not fall by at least 0.01 MSE for 3 eopochs in a row
+    early_stopping = EarlyStopping(patience=3, delta=0.001, verbose=True)
+    
+    #print(f'Creating model for {target_gene}')
+    TF_expression_subset = TF_expressions[TF_subset(net, target_gene)]
+
+    dataset = CustomTFGE(device, TF_expressions=TF_expression_subset, gene_expressions=gene_expressions, network = net, target_gene = target_gene)
+
+    train_dataset, test_dataset = torch.utils.data.random_split(dataset, [0.8, 0.2], generator=torch.Generator().manual_seed(42))
+
+    model = SimpleMMLModel(activation_function_map['MML'], TF_expression_subset.shape[1])
+
+    if torch.cuda.device_count() > 1:
+        model = nn.DataParallel(model)
+
+    model.to(device)
+
+    #initialise same optimiser as LEMBAS
+    optimiser = torch.optim.Adam(model.parameters(), lr=learning_rate)
+
+    train_dataloader = DataLoader(train_dataset, batch_size=batch_size, shuffle=False)
+    test_dataloader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False)
+
+    for t in range(epochs):
         
         #print(f'Creating model for {target_gene}')
         TF_expression_subset = TF_expressions[TF_subset(net, target_gene)]

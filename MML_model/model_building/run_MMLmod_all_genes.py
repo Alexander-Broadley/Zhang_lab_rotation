@@ -69,17 +69,17 @@ learning_rate = 1e-3
 #run 1 sample at a time, but run through each sample per training epoch
 batch_size = TF_expressions.shape[0]
 #max 100 epochs
-epochs =  100 #12747 * 5
+epochs =  200 #12747 * 5
 #initialize MSE loss function - same as LEMBAS
 #loss_fn = nn.MSELoss()
 
 #trying with new loss_fn
 from model_building.pearsons_loss import PearsonLoss
-#loss_fn = PearsonLoss()
-loss_fn = nn.MSELoss()
+loss_fn = PearsonLoss()
+#loss_fn = nn.MSELoss()
 
 #create a results dataframe
-results_df = pd.DataFrame(index = gene_expressions.columns, columns = ['train_loss', 'test_loss', 'stopped_early', 'in_features'])
+results_df = pd.DataFrame(index = gene_expressions.columns, columns = ['train_loss', 'test_loss', 'stopped_early', 'stopped_epoch','in_features'])
 
 #create dataframes to track the predicted and actual expressions for train and test datasets - recreating datasets with pytorch is unreliable and cannot store 161000 datasets
 
@@ -96,10 +96,10 @@ test_actual = pd.DataFrame(columns=gene_expressions.columns)
 for target_gene in gene_expressions.columns:
     print(target_gene)
     #initialise an early stopper to end training if loss on test data does not fall by at least 0.01 MSE for 3 eopochs in a row
-    early_stopping = EarlyStopping(patience=3, delta=0.01, verbose=True)
+    early_stopping = EarlyStopping(patience=3, delta=0.005, verbose=True)
     
     #print(f'Creating model for {target_gene}')
-    TF_expression_subset = TF_expressions[TF_subset(net, target_gene)]
+    TF_expression_subset = TF_expressions#[TF_subset(net, target_gene)]
 
     dataset = CustomTFGE(device, TF_expressions=TF_expression_subset, gene_expressions=gene_expressions, network = net, target_gene = target_gene)
 
@@ -134,6 +134,7 @@ for target_gene in gene_expressions.columns:
         if early_stopping.stop_training:
             print(f"Early stopping at epoch {t+1}")  
             results_df.loc[target_gene, 'stopped_early'] = 1
+            results_df.loc[target_gene, 'stopped_epoch'] = t+1
             break
 
      #put model in eval mode
@@ -165,16 +166,16 @@ for target_gene in gene_expressions.columns:
     results_df.loc[target_gene, 'train_loss'] = train_loss
     results_df.loc[target_gene, 'test_loss'] = test_loss
     results_df.loc[target_gene, 'in_features'] = len(TF_expression_subset.columns)
-    torch.save(model, f'../models/pearsons_randn_allTFs_200/{target_gene}_model.pth')
+    torch.save(model, f'../models/PEARSONS_200_randn_all/{target_gene}_model.pth')
 
 
 
 train_actual.to_csv(f'{DATA_ROOT}/Train_dataset_actual_expressions.csv')
-train_predicted.to_csv(f'{DATA_ROOT}/Train_dataset_predicted_expressions_PEARSONS_all.csv')
+train_predicted.to_csv(f'{DATA_ROOT}/Train_dataset_predicted_expressions_PEARSONS_200_randn_all.csv')
 
 test_actual.to_csv(f'{DATA_ROOT}/Test_dataset_actual_expressions.csv')
-test_predicted.to_csv(f'{DATA_ROOT}/Test_dataset_predicted_expressions_PEARSONS_all.csv')
+test_predicted.to_csv(f'{DATA_ROOT}/Test_dataset_predicted_expressions_PEARSONS_200_randn_all.csv')
 
 
-results_df.to_csv('../data/PEARSONS_results.csv')
+results_df.to_csv('../data/PEARSONS_200_randn_all_results.csv')
 
