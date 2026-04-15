@@ -38,7 +38,7 @@ print(f"Using {device} device")
 DATA_ROOT = '../data'
 
 #get low scoring models to assess improvements
-current_results = pd.read_csv(f'{DATA_ROOT}/Pearsons_results.csv', index_col = 0, header = 0)
+current_results = pd.read_csv(f'{DATA_ROOT}/PEARSONS_results.csv', index_col = 0, header = 0)
 
 low_scoring_models = list(current_results[current_results['train_loss'] > 1].index)
 
@@ -100,7 +100,7 @@ test_actual = pd.DataFrame(columns=gene_expressions.columns)
 for target_gene in gene_expressions[low_scoring_models]:
     print(target_gene)
     #initialise an early stopper to end training if loss on test data does not fall by at least 0.01 MSE for 3 eopochs in a row
-    early_stopping = EarlyStopping(patience=3, delta=0.01, verbose=True)
+    early_stopping = EarlyStopping(patience=3, delta=0.001, verbose=True)
     
     #print(f'Creating model for {target_gene}')
     TF_expression_subset = TF_expressions[TF_subset(net, target_gene)]

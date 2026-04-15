@@ -10,7 +10,7 @@ class OneToOneLinear(nn.Module):
         #same number of weights as inputs (one each), initialised randomly
         self.weight = nn.Parameter(torch.randn(n)) 
         #same number of biases as inputs (one each), initialised as zeros  
-        self.bias   = nn.Parameter(torch.randn(n))  
+        self.bias  = nn.Parameter(torch.randn(n))  
 
     def forward(self, x):
         #then return one output per input, which is the the expected linear results
