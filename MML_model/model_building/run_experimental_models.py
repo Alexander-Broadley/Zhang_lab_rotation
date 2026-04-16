@@ -100,10 +100,10 @@ test_actual = pd.DataFrame(columns = gene_expressions.columns)
 for target_gene in gene_expressions[low_scoring_models]:
     print(target_gene)
     #initialise an early stopper to end training if loss on test data does not fall by at least 0.01 MSE for 3 eopochs in a row
-    early_stopping = EarlyStopping(patience=3, delta=0.001, verbose=True)
+    early_stopping = EarlyStopping(patience=3, delta=0.005, verbose=True)
     
     #print(f'Creating model for {target_gene}')
-    TF_expression_subset = TF_expressions[TF_subset(net, target_gene)]
+    TF_expression_subset = TF_expressions#[TF_subset(net, target_gene)]
 
     dataset = CustomTFGE(device, TF_expressions=TF_expression_subset, gene_expressions=gene_expressions, network = net, target_gene = target_gene)
 
