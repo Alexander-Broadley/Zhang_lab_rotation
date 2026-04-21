@@ -52,10 +52,10 @@ print('Filtering genes in datasets')
 #filter genes to nodes in network
 network_tfs = set(net['TF'].unique())      # TFs
 network_genes = set(net['Gene'].unique())  # target genes
-network_nodes = network_tfs | network_genes
+#network_nodes = network_tfs | network_genes
 
-TF_expressions = TF_expressions[[gene for gene in TF_expressions.columns if gene in list(network_nodes)]]
-gene_expressions = gene_expressions[[gene for gene in gene_expressions.columns if gene in list(network_nodes)]] 
+TF_expressions = TF_expressions[[gene for gene in TF_expressions.columns if gene in list(network_tfs)]]
+gene_expressions = gene_expressions[[gene for gene in gene_expressions.columns if gene in list(network_genes)]] 
 
 #define function to subset transcription factors to only those that directly regulate the target gene
 def TF_subset(net, target_gene):
@@ -107,8 +107,8 @@ for target_gene in gene_expressions.columns:
 
     model = SimpleMMLModel(activation_function_map['MML'], TF_expression_subset.shape[1])
 
-    if torch.cuda.device_count() > 1:
-        model = nn.DataParallel(model)
+    #if torch.cuda.device_count() > 1:
+    #    model = nn.DataParallel(model)
 
     model.to(device)
 
@@ -137,20 +137,7 @@ for target_gene in gene_expressions.columns:
             results_df.loc[target_gene, 'stopped_epoch'] = t+1
             break
 
-     #put model in eval mode
-    model.eval()
-    with torch.no_grad():
-        #for each dataset then load the data (using same seed as training to get same train test split)
-        #get the predicted and actual score this way as easiest way to get values from the torch train test split
-        for batch, (X, y) in enumerate(train_dataloader):
-            train_predicted[target_gene] = model(X).cpu()
-            train_actual[target_gene] = y.cpu()
-
-        for batch, (X, y) in enumerate(test_dataloader):
-            test_predicted[target_gene] = model(X).cpu()
-            test_actual[target_gene] = y.cpu()
-
-     #put model in eval mode
+    #put model in eval mode
     model.eval()
     with torch.no_grad():
         #for each dataset then load the data (using same seed as training to get same train test split)
@@ -179,3 +166,4 @@ test_predicted.to_csv(f'{DATA_ROOT}/Test_dataset_predicted_expressions_PEARSONS_
 
 results_df.to_csv('../data/PEARSONS_200_randn_all_results.csv')
 
+print('Finished PCC loss fn, 200 max epochs, randn bias init, all TF models')

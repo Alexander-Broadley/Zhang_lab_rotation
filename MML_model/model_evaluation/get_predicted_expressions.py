@@ -92,13 +92,6 @@ loss_fn = nn.MSELoss()
 #initialise external dataset predicted values df
 external_predicted = pd.DataFrame(index = external_expressions.index, columns= external_expressions.columns)
 
-#intialise training dataset predicted values df
-#train_predicted = pd.DataFrame(columns=gene_expressions.columns)
-#test_predicted = pd.DataFrame(columns=gene_expressions.columns)
-
-#initialise training dataset actual values df - easier to do it this way as can get values after torch train-test split
-#train_actual = pd.DataFrame(columns=gene_expressions.columns)
-#test_actual = pd.DataFrame(columns=gene_expressions.columns)
 
 missing_models = []
 

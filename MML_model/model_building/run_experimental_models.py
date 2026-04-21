@@ -46,9 +46,12 @@ print('Loading Datasets')
 #Load network
 net = pd.read_csv(f"{DATA_ROOT}/Full data files/network(full).tsv", sep='\t')
 #Load target gene expressions
-gene_expressions = pd.read_csv((f"{DATA_ROOT}/Full data files/Geneexpression (full).tsv"), sep='\t', header=0)
-#load TF expressions
-TF_expressions = pd.read_csv((f"{DATA_ROOT}/Full data files/TF(full).tsv"), sep='\t', header=0)
+gene_expressions = pd.read_csv(f"{DATA_ROOT}/Full data files/ARCHS4_healthy.tsv", sep='\t', index_col=0, header=0)
+gene_expressions= gene_expressions.T
+TF_expressions = pd.read_csv(f"{DATA_ROOT}/Full data files/ARCHS4_healthy.tsv", sep='\t', index_col=0, header=0)
+TF_expressions = TF_expressions.T
+print(gene_expressions)
+print(TF_expressions)
 
 #filter network to only include TFs that are in the dataset
 net = net[net['TF'].isin(TF_expressions.columns)]
@@ -57,10 +60,10 @@ print('Filtering genes in datasets')
 #filter genes to nodes in network
 network_tfs = set(net['TF'].unique())      # TFs
 network_genes = set(net['Gene'].unique())  # target genes
-network_nodes = network_tfs | network_genes
+#network_nodes = network_tfs | network_genes
 
-TF_expressions = TF_expressions[[gene for gene in TF_expressions.columns if gene in list(network_nodes)]]
-gene_expressions = gene_expressions[[gene for gene in gene_expressions.columns if gene in list(network_nodes)]] 
+TF_expressions = TF_expressions[[gene for gene in TF_expressions.columns if gene in list(network_tfs)]]
+gene_expressions = gene_expressions[[gene for gene in gene_expressions.columns if gene in list(network_genes)]] 
 
 #define function to subset transcription factors to only those that directly regulate the target gene
 def TF_subset(net, target_gene):
@@ -74,7 +77,7 @@ learning_rate = 1e-3
 #run 1 sample at a time, but run through each sample per training epoch
 batch_size = TF_expressions.shape[0]
 #max 100 epochs
-epochs =  200 #12747 * 5
+epochs =  100 #12747 * 5
 #initialize MSE loss function - same as LEMBAS
 #loss_fn = nn.MSELoss()
 
@@ -96,14 +99,16 @@ test_predicted = pd.DataFrame(columns = gene_expressions.columns)
 train_actual = pd.DataFrame(columns = gene_expressions.columns)
 test_actual = pd.DataFrame(columns = gene_expressions.columns)
 
+print(gene_expressions.shape)
+print(TF_expressions.shape)
 #for the remaining code need to execute per target gene (per gene in gene_expressions)
 for target_gene in gene_expressions[low_scoring_models]:
     print(target_gene)
     #initialise an early stopper to end training if loss on test data does not fall by at least 0.01 MSE for 3 eopochs in a row
-    early_stopping = EarlyStopping(patience=3, delta=0.005, verbose=True)
+    early_stopping = EarlyStopping(patience=3, delta=0.01, verbose=True)
     
     #print(f'Creating model for {target_gene}')
-    TF_expression_subset = TF_expressions#[TF_subset(net, target_gene)]
+    TF_expression_subset = TF_expressions[TF_subset(net, target_gene)]
 
     dataset = CustomTFGE(device, TF_expressions=TF_expression_subset, gene_expressions=gene_expressions, network = net, target_gene = target_gene)
 
@@ -191,3 +196,4 @@ test_predicted.to_csv(f'./data/Test_dataset_predicted_expressions_EXP.csv')
 
 results_df.to_csv('./data/EXPERIMENTAL_results.csv')
 
+print('Training of experimental models: 200 epochs, healthy ARCHS4, randn bias: finished')

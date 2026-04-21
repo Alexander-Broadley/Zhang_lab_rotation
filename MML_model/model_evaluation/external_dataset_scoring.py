@@ -66,13 +66,13 @@ orig_dataset_GEs = list(gene_expressions.columns)
 #---------------------------------------------------------------
 
 #subset to just TFs used when building model
-TF_expressions = external_expressions[orig_dataset_TFs]
+TF_expressions = external_expressions[[TF for TF in list(TF_expressions.columns) if TF in orig_dataset_TFs]]
 #only include target genes for which there exists a model
 gene_expressions = external_expressions[[gene for gene in list(external_expressions.columns) if gene in orig_dataset_GEs]]
 
 #refilter to only those in network now using external dataset
-TF_expressions = TF_expressions[[gene for gene in TF_expressions.columns if gene in list(network_nodes)]]
-gene_expressions = gene_expressions[[gene for gene in gene_expressions.columns if gene in list(network_nodes)]] 
+TF_expressions = TF_expressions[[gene for gene in TF_expressions.columns if gene in list(network_tfs)]]
+gene_expressions = gene_expressions[[gene for gene in gene_expressions.columns if gene in list(network_genes)]] 
 
 #---------------------------------------------------------------
 #load models per target gene
@@ -80,7 +80,8 @@ gene_expressions = gene_expressions[[gene for gene in gene_expressions.columns i
 
 batch_size = TF_expressions.shape[0]
 
-loss_fn = nn.MSELoss()
+from model_building.pearsons_loss import PearsonLoss
+loss_fn = PearsonLoss()
 
 #initialise eval results df
 results_df = pd.DataFrame(index = gene_expressions.columns, columns = ['external_set_score'])
@@ -90,22 +91,22 @@ missing_models = []
 for target_gene in gene_expressions.columns:
     print(f'Generating scores for {target_gene} model')
     #print(f'Creating model for {target_gene}')
-    TF_expression_subset = TF_expressions[TF_subset(net, target_gene)]
+    TF_expression_subset = TF_expressions#[TF_subset(net, target_gene)]
 
     model = SimpleMMLModel(activation_function_map['MML'], TF_expression_subset.shape[1])
     model.to(device)
 
     dataset = CustomTFGE(device, TF_expressions=TF_expression_subset, gene_expressions=gene_expressions, network = net, target_gene = target_gene)
-    #model = torch.load(f"{MODEL_ROOT}/pearsons_models/{target_gene}_TPM_model.pth", weights_only = False) 
     #shouldn't need this anymore - fixed model saving issue
     try:
-        model.load_state_dict(torch.load(f"{MODEL_ROOT}/pearsons_models/{target_gene}_TPM_model.pth", weights_only = True))
+        model = torch.load(f"{MODEL_ROOT}/PEARSONS_200_randn_all/{target_gene}_model.pth", weights_only = False)
         #model = torch.load(f"{MODEL_ROOT}/pearsons_models/{target_gene}_TPM_model.pth", weights_only = False)
         eval_dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=False)
-        results_df.loc[target_gene, 'external_set_score'] = gene_MSE_all_samples(eval_dataloader, model, loss_fn, target_gene, rev_log = True)
+        results_df.loc[target_gene, 'external_set_score'] = gene_MSE_all_samples(eval_dataloader, model, loss_fn, target_gene, rev_log = False)
     except:
         missing_models.append(target_gene)
-        print(f'{target_gene} model is missing')
         pass
 
-results_df.to_csv('data/external_MSE_PEARSONS.csv')
+print(f'{len(missing_models)} are missing')
+
+results_df.to_csv('data/external_PEARSONS_200_randn_all.csv')
