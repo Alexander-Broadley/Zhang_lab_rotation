@@ -54,8 +54,8 @@ network_genes = set(net['Gene'].unique())  # target genes
 network_nodes = network_tfs | network_genes
 
 #filter TF and gene expressions to only those in network
-TF_expressions = TF_expressions[[gene for gene in TF_expressions.columns if gene in list(network_nodes)]]
-gene_expressions = gene_expressions[[gene for gene in gene_expressions.columns if gene in list(network_nodes)]] 
+TF_expressions = TF_expressions[[gene for gene in TF_expressions.columns if gene in list(network_tfs)]]
+gene_expressions = gene_expressions[[gene for gene in gene_expressions.columns if gene in list(network_genes)]] 
 
 orig_dataset_TFs = list(TF_expressions.columns)
 orig_dataset_GEs = list(gene_expressions.columns)
@@ -106,8 +106,8 @@ log_model = False
 for target_gene in gene_expressions.columns:
     print(f'Generating scores for {target_gene} model')
 
-    external_TFs = external_TF[TF_subset(net, target_gene)]
-    TF_expression_subset = TF_expressions[TF_subset(net, target_gene)]
+    external_TFs = external_TF#[TF_subset(net, target_gene)]
+    TF_expression_subset = TF_expressions#[TF_subset(net, target_gene)]
 
     #only run external scoring if the target gene is in the external dataset
     if target_gene in external_expressions.columns:
@@ -115,7 +115,7 @@ for target_gene in gene_expressions.columns:
         eval_dataloader = DataLoader(external_dataset, batch_size=len(external_dataset), shuffle=False)
 
     #load desired models
-    model = torch.load(f"{MODEL_ROOT}/MSE_models/{target_gene}_model.pth", weights_only = False)
+    model = torch.load(f"{MODEL_ROOT}/PEARSONS_200_randn_all/{target_gene}_model.pth", weights_only = False)
     
     #put model in eval mode
     model.eval()
@@ -135,6 +135,6 @@ for target_gene in gene_expressions.columns:
 
     
 
-external_predicted.to_csv(f'{DATA_ROOT}/external_dataset_predicted_expressions_PEARSONS.csv')
+external_predicted.to_csv(f'{DATA_ROOT}/external_dataset_predicted_expressions_PEARSONS_200_randn_all.csv')
 
 

@@ -2,8 +2,8 @@
 
 #define the training loop
 def train_one_epoch(dataloader, model, loss_fn, optimiser):
-    losses = []
-    size = len(dataloader.dataset)
+    #losses = []
+    #size = len(dataloader.dataset)
     
     #put model in train mode
     model.train()
@@ -22,13 +22,6 @@ def train_one_epoch(dataloader, model, loss_fn, optimiser):
         optimiser.step()
 
         loss = loss.item()
-        losses.append(loss)
+        #losses.append(loss)
 
         return(loss)
-
-        #if batch +1 == size:
-        #    print(f'Epoch Finished at batch {batch}\n')
-
-        #print loss every 500 batches - this is effectively every 500th sample
-        #if batch % 1000 == 0:
-        #    print(f"loss: {round(loss, 10)}")

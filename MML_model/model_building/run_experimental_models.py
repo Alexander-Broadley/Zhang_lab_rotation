@@ -38,7 +38,7 @@ print(f"Using {device} device")
 DATA_ROOT = '../data'
 
 #get low scoring models to assess improvements
-current_results = pd.read_csv(f'{DATA_ROOT}/PEARSONS_results.csv', index_col = 0, header = 0)
+current_results = pd.read_csv(f'{DATA_ROOT}/PEARSONS_results_ACC.csv', index_col = 0, header = 0)
 
 low_scoring_models = list(current_results[current_results['train_loss'] > 1].index)
 
@@ -46,12 +46,12 @@ print('Loading Datasets')
 #Load network
 net = pd.read_csv(f"{DATA_ROOT}/Full data files/network(full).tsv", sep='\t')
 #Load target gene expressions
-gene_expressions = pd.read_csv(f"{DATA_ROOT}/Full data files/ARCHS4_healthy.tsv", sep='\t', index_col=0, header=0)
-gene_expressions= gene_expressions.T
-TF_expressions = pd.read_csv(f"{DATA_ROOT}/Full data files/ARCHS4_healthy.tsv", sep='\t', index_col=0, header=0)
-TF_expressions = TF_expressions.T
-print(gene_expressions)
-print(TF_expressions)
+#gene_expressions = pd.read_csv(f"{DATA_ROOT}/Full data files/Genexpression_TPM.tsv", sep='\t', index_col=0, header=0)
+#TF_expressions = pd.read_csv(f"{DATA_ROOT}/Full data files/TF_TPM.tsv", sep='\t', index_col=0, header=0)
+
+
+gene_expressions = pd.read_csv((f"{DATA_ROOT}/Full data files/Geneexpression (full).tsv"), sep='\t', header=0)
+TF_expressions = pd.read_csv((f"{DATA_ROOT}/Full data files/TF(full).tsv"), sep='\t', header=0)
 
 #filter network to only include TFs that are in the dataset
 net = net[net['TF'].isin(TF_expressions.columns)]
@@ -82,7 +82,7 @@ epochs =  100 #12747 * 5
 #loss_fn = nn.MSELoss()
 
 #trying with new loss_fn
-from model_building.pearsons_loss import PearsonLoss
+from model_building.stable_pearsons_loss import PearsonLoss
 loss_fn = PearsonLoss()
 
 #create a results dataframe
@@ -99,35 +99,15 @@ test_predicted = pd.DataFrame(columns = gene_expressions.columns)
 train_actual = pd.DataFrame(columns = gene_expressions.columns)
 test_actual = pd.DataFrame(columns = gene_expressions.columns)
 
-print(gene_expressions.shape)
-print(TF_expressions.shape)
+failed_models = 0
 #for the remaining code need to execute per target gene (per gene in gene_expressions)
 for target_gene in gene_expressions[low_scoring_models]:
     print(target_gene)
-    #initialise an early stopper to end training if loss on test data does not fall by at least 0.01 MSE for 3 eopochs in a row
-    early_stopping = EarlyStopping(patience=3, delta=0.01, verbose=True)
-    
-    #print(f'Creating model for {target_gene}')
-    TF_expression_subset = TF_expressions[TF_subset(net, target_gene)]
 
-    dataset = CustomTFGE(device, TF_expressions=TF_expression_subset, gene_expressions=gene_expressions, network = net, target_gene = target_gene)
-
-    train_dataset, test_dataset = torch.utils.data.random_split(dataset, [0.8, 0.2], generator=torch.Generator().manual_seed(42))
-
-    model = SimpleMMLModel(activation_function_map['MML'], TF_expression_subset.shape[1])
-
-    if torch.cuda.device_count() > 1:
-        model = nn.DataParallel(model)
-
-    model.to(device)
-
-    #initialise same optimiser as LEMBAS
-    optimiser = torch.optim.Adam(model.parameters(), lr=learning_rate)
-
-    train_dataloader = DataLoader(train_dataset, batch_size=batch_size, shuffle=False)
-    test_dataloader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False)
-
-    for t in range(epochs):
+    #this catches errors due to instability in the pearsons correlation function that have arisen after dataset transformation
+    try:
+        #initialise an early stopper to end training if loss on test data does not fall by at least 0.01 MSE for 3 eopochs in a row
+        early_stopping = EarlyStopping(patience=3, delta=0.01, verbose=True)
         
         #print(f'Creating model for {target_gene}')
         TF_expression_subset = TF_expressions[TF_subset(net, target_gene)]
@@ -180,11 +160,15 @@ for target_gene in gene_expressions[low_scoring_models]:
                 test_predicted[target_gene] = model(X).cpu()
                 test_actual[target_gene] = y.cpu()
 
-        results_df.loc[target_gene, 'train_loss'] = train_loss
-        results_df.loc[target_gene, 'test_loss'] = test_loss
-        results_df.loc[target_gene, 'in_features'] = len(TF_expression_subset.columns)
-        torch.save(model, f'../models/experimental_models/{target_gene}_model.pth')
+            results_df.loc[target_gene, 'train_loss'] = train_loss
+            results_df.loc[target_gene, 'test_loss'] = test_loss
+            results_df.loc[target_gene, 'in_features'] = len(TF_expression_subset.columns)
+            torch.save(model, f'../models/experimental_models/{target_gene}_model.pth')
+    except:
+        print(f'{target_gene} model failed')
+        failed_models += 1
 
+print(f'{failed_models} models failed')
 
 
 train_actual.to_csv(f'./data/Train_dataset_actual_expressions_EXP.csv')
