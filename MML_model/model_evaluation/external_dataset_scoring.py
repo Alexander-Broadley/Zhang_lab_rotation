@@ -55,8 +55,8 @@ network_genes = set(net['Gene'].unique())  # target genes
 network_nodes = network_tfs | network_genes
 
 #filter TF and gene expressions to only those in network
-TF_expressions = TF_expressions[[gene for gene in TF_expressions.columns if gene in list(network_nodes)]]
-gene_expressions = gene_expressions[[gene for gene in gene_expressions.columns if gene in list(network_nodes)]] 
+TF_expressions = TF_expressions[[gene for gene in TF_expressions.columns if gene in list(network_tfs)]]
+gene_expressions = gene_expressions[[gene for gene in gene_expressions.columns if gene in list(network_genes)]] 
 
 orig_dataset_TFs = list(TF_expressions.columns)
 orig_dataset_GEs = list(gene_expressions.columns)
@@ -71,8 +71,8 @@ TF_expressions = external_expressions[[TF for TF in list(TF_expressions.columns)
 gene_expressions = external_expressions[[gene for gene in list(external_expressions.columns) if gene in orig_dataset_GEs]]
 
 #refilter to only those in network now using external dataset
-TF_expressions = TF_expressions[[gene for gene in TF_expressions.columns if gene in list(network_tfs)]]
-gene_expressions = gene_expressions[[gene for gene in gene_expressions.columns if gene in list(network_genes)]] 
+#TF_expressions = TF_expressions[[gene for gene in TF_expressions.columns if gene in list(network_tfs)]]
+#gene_expressions = gene_expressions[[gene for gene in gene_expressions.columns if gene in list(network_genes)]] 
 
 #---------------------------------------------------------------
 #load models per target gene
@@ -84,7 +84,10 @@ from model_building.pearsons_loss import PearsonLoss
 loss_fn = PearsonLoss()
 
 #initialise eval results df
-results_df = pd.DataFrame(index = gene_expressions.columns, columns = ['external_set_score'])
+results_df = pd.DataFrame(index = gene_expressions.columns, columns = ['external_loss'])
+
+#initialise external dataset predicted values df
+external_predicted = pd.DataFrame(index = external_expressions.index, columns= external_expressions.columns)
 
 missing_models = []
 
@@ -102,11 +105,17 @@ for target_gene in gene_expressions.columns:
         model = torch.load(f"{MODEL_ROOT}/PEARSONS_200_randn_all/{target_gene}_model.pth", weights_only = False)
         #model = torch.load(f"{MODEL_ROOT}/pearsons_models/{target_gene}_TPM_model.pth", weights_only = False)
         eval_dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=False)
-        results_df.loc[target_gene, 'external_set_score'] = gene_MSE_all_samples(eval_dataloader, model, loss_fn, target_gene, rev_log = False)
+        results_df.loc[target_gene, 'external_loss'] = gene_MSE_all_samples(eval_dataloader, model, loss_fn, target_gene, rev_log = False)
+        model.eval()
+        with torch.no_grad():
+            for batch, (X, y) in enumerate(eval_dataloader):     
+                external_predicted[target_gene] = model(X).cpu()
     except:
+        print('model failed')
         missing_models.append(target_gene)
         pass
 
 print(f'{len(missing_models)} are missing')
 
 results_df.to_csv('data/external_PEARSONS_200_randn_all.csv')
+external_predicted.to_csv(f'{DATA_ROOT}/external_dataset_predicted_expressions_PEARSONS_200_randn_all.csv')
