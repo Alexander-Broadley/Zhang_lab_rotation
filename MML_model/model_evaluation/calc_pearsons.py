@@ -10,7 +10,7 @@ DATA_ROOT = '../data'
 FIGURE_ROOT = './figures'
 
 #determines which set of models to use
-suffix = '_PEARSONS_200_randn_all'
+suffix = '_HEALTHY'
 
 #======================================================================
 #load expressions datasets
@@ -24,19 +24,25 @@ train_actual_TPM = pd.read_csv(f"{DATA_ROOT}/Train_dataset_actual_expressions.cs
 test_predicted_TPM = pd.read_csv(f"{DATA_ROOT}/Test_dataset_predicted_expressions{suffix}.csv", index_col=0, header=0)
 test_actual_TPM = pd.read_csv(f"{DATA_ROOT}/Test_dataset_actual_expressions.csv", index_col=0, header=0)
 
-external_actual_TPM = pd.read_csv(f"{DATA_ROOT}/Full data files/liver_bulk_external.tsv", sep = '\t', index_col=0, header=0)
-external_predicted_TPM = pd.read_csv(f"{DATA_ROOT}/external_dataset_predicted_expressions{suffix}.csv", index_col=0, header=0)
+#external_actual_TPM = pd.read_csv(f"{DATA_ROOT}/Full data files/liver_bulk_external.tsv", sep = '\t', index_col=0, header=0)
+#external_predicted_TPM = pd.read_csv(f"{DATA_ROOT}/external_dataset_predicted_expressions{suffix}.csv", index_col=0, header=0)
 
 #remove columns for genes that no models exist for
-external_predicted_TPM.drop(['SHOX', 'ZBED1'], axis = 1, inplace = True)
+#external_predicted_TPM.drop(['SHOX', 'ZBED1'], axis = 1, inplace = True)
 
 #temporary before fixing code for external model creation - drop all NA columns
-external_predicted_TPM = external_predicted_TPM.dropna(axis=1, how='all')
+#external_predicted_TPM = external_predicted_TPM.dropna(axis=1, how='all')
 
 #ensure column indexes (genes) are in the same order across datasets
-test_actual_TPM = test_actual_TPM[train_predicted_TPM.columns]
+
+#for healthy models only
+
+train_predicted_TPM['F8A1', 'H2AC18', 'H2AC19', 'HLA-DRB3', 'HLA-DRB4', 'HOMEZ', 'PRRC2B', 'SLC9A3R1', 'SLC9A3R2', 'SOD2', 'TDGF1', 'UGT1A3']
+
+
+train_actual_TPM = test_actual_TPM[train_predicted_TPM.columns]
 test_actual_TPM = test_actual_TPM[test_predicted_TPM.columns]
-external_actual_TPM = external_actual_TPM[external_predicted_TPM.columns]
+#external_actual_TPM = external_actual_TPM[external_predicted_TPM.columns]
 
 print('Loaded Datasets')
 
@@ -46,7 +52,7 @@ train_predicted_TPM = train_predicted_TPM.dropna(axis=1, how='all')
 train_actual_TPM = train_actual_TPM.dropna(axis=1, how='all')
 test_predicted_TPM = test_predicted_TPM.dropna(axis=1, how='all')
 test_actual_TPM = test_actual_TPM.dropna(axis=1, how='all')
-external_actual_TPM = external_actual_TPM.dropna(axis=1, how='all')
+#external_actual_TPM = external_actual_TPM.dropna(axis=1, how='all')
 
 #======================================================================
 #calculate sample wise correlation values
@@ -132,20 +138,11 @@ def get_correlations_df(df1, df2, dataset_label, rowise = True):
 
     return(results_df)
 
-if suffix == '':
-    title_keyword = 'MML'
-elif suffix == '_LOG':
-    title_keyword = 'LOG'
-elif suffix == '_REFERENCE':
-    title_keyword = 'Reference'
-elif suffix == '_PEARSONS':
-    title_keyword = 'Pearsons'
-
 print('Calculating Samplewise Correlations')
 samplewise_df_list = []
 samplewise_df_list.append(get_correlations_df(train_actual_TPM, train_predicted_TPM, dataset_label='Train', rowise = True))
 samplewise_df_list.append(get_correlations_df(test_actual_TPM, test_predicted_TPM, dataset_label='Test', rowise = True))
-samplewise_df_list.append(get_correlations_df(external_actual_TPM, external_predicted_TPM, dataset_label='External', rowise = True))
+#samplewise_df_list.append(get_correlations_df(external_actual_TPM, external_predicted_TPM, dataset_label='External', rowise = True))
 
 samplewise_correlations = pd.concat(samplewise_df_list, ignore_index = True)
 #create_pearsons_violin(results_df=samplewise_correlations, title = 'Samplewise Pearsons Correlations for TPM models', file_title='samplewise_pearsons_TPM')

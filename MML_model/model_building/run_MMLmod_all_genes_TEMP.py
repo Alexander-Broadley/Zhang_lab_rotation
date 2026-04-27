@@ -43,19 +43,19 @@ net = pd.read_csv(f"{DATA_ROOT}/Full data files/network(full).tsv", sep='\t')
 #Load target gene expressions
 
 
-#gene_expressions = pd.read_csv((f"{DATA_ROOT}/Full data files/Geneexpression (full).tsv"), sep='\t', header=0)
-gene_expressions = pd.read_csv((f"{DATA_ROOT}/Full data files/ARCHS4_healthy.tsv"), sep='\t', header=0, index_col= 0)
-gene_expressions.reset_index()
-print(gene_expressions)
-gene_expressions = gene_expressions + 1
-gene_expressions = np.log10(gene_expressions)
+gene_expressions = pd.read_csv((f"{DATA_ROOT}/Full data files/Geneexpression (full).tsv"), sep='\t', header=0)
+#gene_expressions = pd.read_csv((f"{DATA_ROOT}/Full data files/ARCHS4_healthy.tsv"), sep='\t', header=0, index_col= 0)
+#gene_expressions.reset_index()
+#print(gene_expressions)
+#gene_expressions = gene_expressions + 1
+#gene_expressions = np.log10(gene_expressions)
 
 #load TF expressions
-#TF_expressions = pd.read_csv((f"{DATA_ROOT}/Full data files/TF(full).tsv"), sep='\t', header=0)
-TF_expressions = pd.read_csv((f"{DATA_ROOT}/Full data files/ARCHS4_healthy.tsv"), sep='\t', header=0, index_col=0)
-TF_expressions.reset_index()
-TF_expressions = TF_expressions + 1
-TF_expressions = np.log10(TF_expressions)
+TF_expressions = pd.read_csv((f"{DATA_ROOT}/Full data files/TF(full).tsv"), sep='\t', header=0)
+#TF_expressions = pd.read_csv((f"{DATA_ROOT}/Full data files/ARCHS4_healthy.tsv"), sep='\t', header=0, index_col=0)
+#TF_expressions.reset_index()
+#TF_expressions = TF_expressions + 1
+#TF_expressions = np.log10(TF_expressions)
 
 #filter network to only include TFs that are in the dataset
 net = net[net['TF'].isin(TF_expressions.columns)]
@@ -125,7 +125,7 @@ for target_gene in gene_expressions.columns:
     model.to(device)
 
     #initialise same optimiser as LEMBAS
-    optimiser = torch.optim.Adam(model.parameters(), lr=learning_rate)
+    optimiser = torch.optim.Adam(model.parameters(), lr=learning_rate, weight_decay = 0.00001)
 
     train_dataloader = DataLoader(train_dataset, batch_size=batch_size, shuffle=False)
     test_dataloader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False)
@@ -165,17 +165,17 @@ for target_gene in gene_expressions.columns:
     results_df.loc[target_gene, 'train_loss'] = train_loss
     results_df.loc[target_gene, 'test_loss'] = test_loss
     results_df.loc[target_gene, 'in_features'] = len(TF_expression_subset.columns)
-    torch.save(model, f'../models/HEALTHY_models/{target_gene}_model.pth')
+    torch.save(model, f'../models/PEARSONS_L2/{target_gene}_model.pth')
 
 
 
 train_actual.to_csv(f'{DATA_ROOT}/Train_dataset_actual_expressions.csv')
-train_predicted.to_csv(f'{DATA_ROOT}/Train_dataset_predicted_expressions_HEALTHY.csv')
+train_predicted.to_csv(f'{DATA_ROOT}/Train_dataset_predicted_expressions_PEARSONS_L2.csv')
 
 test_actual.to_csv(f'{DATA_ROOT}/Test_dataset_actual_expressions.csv')
-test_predicted.to_csv(f'{DATA_ROOT}/Test_dataset_predicted_expressions_HEALTHY.csv')
+test_predicted.to_csv(f'{DATA_ROOT}/Test_dataset_predicted_expressions_PEARSONS_L2.csv')
 
 
-results_df.to_csv('../data/HEALTHY_results.csv')
+results_df.to_csv('../data/PEARSONS_L2_results.csv')
 
-print('Finished Healthy models all TFs')
+print('Finished PEARSONS L2 models')
