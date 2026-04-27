@@ -41,6 +41,24 @@ TF_expressions = pd.read_csv((f"{DATA_ROOT}/Full data files/TF(full).tsv"), sep=
 external_expressions['SHOX'] = 0
 external_expressions['ZBED1'] = 0
 
+'''
+#### Only for healthy models
+net = pd.read_csv(f"{DATA_ROOT}/Full data files/network(full).tsv", sep='\t')
+
+#gene_expressions = pd.read_csv((f"{DATA_ROOT}/Full data files/Geneexpression (full).tsv"), sep='\t', header=0)
+gene_expressions = pd.read_csv((f"{DATA_ROOT}/Full data files/ARCHS4_healthy.tsv"), sep='\t', header=0, index_col= 0)
+gene_expressions.reset_index()
+print(gene_expressions)
+gene_expressions = gene_expressions + 1
+gene_expressions = np.log10(gene_expressions)
+
+#load TF expressions
+#TF_expressions = pd.read_csv((f"{DATA_ROOT}/Full data files/TF(full).tsv"), sep='\t', header=0)
+TF_expressions = pd.read_csv((f"{DATA_ROOT}/Full data files/ARCHS4_healthy.tsv"), sep='\t', header=0, index_col=0)
+TF_expressions.reset_index()
+TF_expressions = TF_expressions + 1
+TF_expressions = np.log10(TF_expressions)
+'''
 #---------------------------------------------------------------
 #filtering genes as in model creation pipeline
 #---------------------------------------------------------------
@@ -107,7 +125,7 @@ for target_gene in gene_expressions.columns:
     print(f'Generating scores for {target_gene} model')
 
     external_TFs = external_TF#[TF_subset(net, target_gene)]
-    TF_expression_subset = TF_expressions#[TF_subset(net, target_gene)]
+    #TF_expression_subset = TF_expressions#[TF_subset(net, target_gene)]
 
     #only run external scoring if the target gene is in the external dataset
     if target_gene in external_expressions.columns:
@@ -115,7 +133,7 @@ for target_gene in gene_expressions.columns:
         eval_dataloader = DataLoader(external_dataset, batch_size=len(external_dataset), shuffle=False)
 
     #load desired models
-    model = torch.load(f"{MODEL_ROOT}/PEARSONS_200_randn_all/{target_gene}_model.pth", weights_only = False)
+    model = torch.load(f"{MODEL_ROOT}/PEARSONS_L2/{target_gene}_model.pth", weights_only = False)
     
     #put model in eval mode
     model.eval()
@@ -135,6 +153,6 @@ for target_gene in gene_expressions.columns:
 
     
 
-external_predicted.to_csv(f'{DATA_ROOT}/external_dataset_predicted_expressions_PEARSONS_200_randn_all.csv')
+external_predicted.to_csv(f'{DATA_ROOT}/external_dataset_predicted_expressions_PEASONS_L2.csv')
 
 

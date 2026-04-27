@@ -48,8 +48,8 @@ network_tfs = set(net['TF'].unique())      # TFs
 network_genes = set(net['Gene'].unique())  # target genes
 network_nodes = network_tfs | network_genes
 
-TF_expressions_orig = TF_expressions_orig[[gene for gene in TF_expressions_orig.columns if gene in list(network_nodes)]]
-gene_expressions_orig = gene_expressions_orig[[gene for gene in gene_expressions_orig.columns if gene in list(network_nodes)]]
+TF_expressions_orig = TF_expressions_orig[[gene for gene in TF_expressions_orig.columns if gene in list(network_tfs)]]
+gene_expressions_orig = gene_expressions_orig[[gene for gene in gene_expressions_orig.columns if gene in list(network_genes)]]
 
 print('Loading Datasets')
 
@@ -63,8 +63,18 @@ print('Loaded Gene Expressions')
 TF_expressions = pd.read_csv(f"{DATA_ROOT}/GEP_Liver_bulk/GEP_Normal_TF_expressions.csv", index_col = 0, header=0)
 print('Loaded TF expressions')
 
+TF_expressions = TF_expressions.drop('TF', axis = 1)
 print(TF_expressions_orig.shape)
 print(TF_expressions.shape)
+
+#TF_expressions = TF_expressions[TF_expressions_orig.columns]
+
+
+for x in TF_expressions.columns:
+     if x in TF_expressions_orig.columns:
+          pass
+     else:
+        print(x)
 #---------------------------------------------------------------
 #load models per target gene
 #---------------------------------------------------------------
@@ -83,20 +93,18 @@ print('Starting Model Scoring')
 for target_gene in gene_expressions.columns:
     print(f'Generating scores for {target_gene} model')
     #print(f'Creating model for {target_gene}')
-    try:
-        TF_expression_subset = TF_expressions[TF_subset(net, target_gene)]
-    
-        dataset = CustomTFGE(device, TF_expressions=TF_expression_subset, gene_expressions=gene_expressions, network = net, target_gene = target_gene)
-        eval_dataloader = DataLoader(dataset, batch_size=len(dataset), shuffle=False)
+    TF_expression_subset = TF_expressions#[TF_subset(net, target_gene)]
 
-        model = torch.load(f"{MODEL_ROOT}/PEARSONS_models/{target_gene}_model.pth", weights_only = False).to(device)
+    dataset = CustomTFGE(device, TF_expressions=TF_expression_subset, gene_expressions=gene_expressions, network = net, target_gene = target_gene)
+    eval_dataloader = DataLoader(dataset, batch_size=len(dataset), shuffle=False)
 
-        #put model in eval mode
-        model.eval()
-        with torch.no_grad():
-            for batch, (X, y) in enumerate(eval_dataloader):     
+    model = torch.load(f"{MODEL_ROOT}/PEARSONS_200_randn_all/{target_gene}_model.pth", weights_only = False).to(device)
+
+    #put model in eval mode
+    model.eval()
+    with torch.no_grad():
+        for batch, (X, y) in enumerate(eval_dataloader):     
                 external_predicted[target_gene] = model(X).cpu()
-    except:
-        print(f'Model {target_gene} could not load')
+
         
-external_predicted.to_csv('../data/GEP_results/GEP_Normal_results.csv')
+external_predicted.to_csv('../data/GEP_results/GEP_Normal_results_P2RA.csv')
