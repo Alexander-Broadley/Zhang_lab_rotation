@@ -3,7 +3,7 @@ import math
 import numpy as np
 
 #define a function to calculate the MSE 
-def gene_MSE_all_samples(dataloader, model, loss_fn, target_gene, rev_log = False):
+def batch_loss(dataloader, model, loss_fn, target_gene, rev_log = False):
     #put model in eval mode
     model.eval()
     with torch.no_grad():

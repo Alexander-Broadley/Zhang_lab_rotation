@@ -23,10 +23,12 @@ from model_building.early_stopper import EarlyStopping
 from model_building.activation_functions import activation_function_map
 #import model
 from model_building.simpleMMLModel import SimpleMMLModel
-#import MSE per batch calculator
-from model_building.gene_MSE_all_samples import gene_MSE_all_samples
+#import function to calculate loss per batch (in this case 1 batch is all samples)
+from model_building.batch_loss import batch_loss
 #import function to train a single epoch
 from model_building.train_one_epoch import train_one_epoch
+
+from model_building.filter_dataset import filter_datasets
 
 #import dataset object
 from model_building.customTFGE_dataset import CustomTFGE
@@ -42,7 +44,11 @@ print('Loading Datasets')
 net = pd.read_csv(f"{DATA_ROOT}/Full data files/network(full).tsv", sep='\t')
 #Load target gene expressions
 
+#try new filtering function
+gene_expressions = pd.read_csv((f"{DATA_ROOT}/Full data files/ARCHS4_healthy_log.tsv"), sep='\t', header=0)
+TF_expressions, gene_expressions = filter_datasets(net, GE_df=gene_expressions)
 
+'''
 #gene_expressions = pd.read_csv((f"{DATA_ROOT}/Full data files/Geneexpression (full).tsv"), sep='\t', header=0)
 gene_expressions = pd.read_csv((f"{DATA_ROOT}/archs4/ARCHS4_healthy_TPM_stricter.tsv"), sep='\t', header=0, index_col= 0)
 gene_expressions.reset_index()
@@ -73,6 +79,8 @@ network_genes = set(net['Gene'].unique())  # target genes
 #network_nodes = network_tfs | network_genes
 TF_expressions = TF_expressions[[gene for gene in TF_expressions.columns if gene in list(network_tfs)]]
 gene_expressions = gene_expressions[[gene for gene in gene_expressions.columns if gene in list(network_genes)]] 
+'''
+
 
 #define function to subset transcription factors to only those that directly regulate the target gene
 def TF_subset(net, target_gene):
@@ -87,19 +95,15 @@ learning_rate = 1e-3
 batch_size = TF_expressions.shape[0]
 #max 100 epochs
 epochs =  200 #12747 * 5
-#initialize MSE loss function - same as LEMBAS
-#loss_fn = nn.MSELoss()
 
 #trying with new loss_fn
 from model_building.pearsons_loss import PearsonLoss
 loss_fn = PearsonLoss()
-#loss_fn = nn.MSELoss()
 
 #create a results dataframe
 results_df = pd.DataFrame(index = gene_expressions.columns, columns = ['train_loss', 'test_loss', 'stopped_early', 'stopped_epoch','in_features'])
 
 #create dataframes to track the predicted and actual expressions for train and test datasets - recreating datasets with pytorch is unreliable and cannot store 161000 datasets
-
 #intialise training dataset predicted values df
 train_predicted = pd.DataFrame(columns=gene_expressions.columns)
 test_predicted = pd.DataFrame(columns=gene_expressions.columns)
@@ -108,27 +112,27 @@ test_predicted = pd.DataFrame(columns=gene_expressions.columns)
 train_actual = pd.DataFrame(columns=gene_expressions.columns)
 test_actual = pd.DataFrame(columns=gene_expressions.columns)
 
+print('TF expressions shape:', TF_expressions.shape)
+print('Target gene expressions shape:', gene_expressions.shape)
 #for the remaining code need to execute per target gene (per gene in gene_expressions)
 for target_gene in gene_expressions.columns:
-    print(target_gene)
-
+    print(f'Creating model for {target_gene}')
     if target_gene in TF_expressions.columns:
         print('Target gene is a TF, removing from TF dataset')
         TF_expressions.drop(target_gene, axis = 1)
+
     #initialise an early stopper to end training if loss on test data does not fall by at least 0.01 MSE for 3 eopochs in a row
     early_stopping = EarlyStopping(patience=3, delta=0.005, verbose=True)
     
-    #print(f'Creating model for {target_gene}')
     TF_expression_subset = TF_expressions#[TF_subset(net, target_gene)]
 
     dataset = CustomTFGE(device, TF_expressions=TF_expression_subset, gene_expressions=gene_expressions, network = net, target_gene = target_gene)
-
     train_dataset, test_dataset = torch.utils.data.random_split(dataset, [0.8, 0.2], generator=torch.Generator().manual_seed(42))
 
     model = SimpleMMLModel(activation_function_map['MML'], TF_expression_subset.shape[1])
 
-    #if torch.cuda.device_count() > 1:
-    #    model = nn.DataParallel(model)
+    if torch.cuda.device_count() > 1:
+        model = nn.DataParallel(model)
 
     model.to(device)
 
@@ -139,11 +143,8 @@ for target_gene in gene_expressions.columns:
     test_dataloader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False)
 
     for t in range(epochs):
-        
         train_loss = train_one_epoch(train_dataloader, model, loss_fn, optimiser)
-
-        test_loss = gene_MSE_all_samples(test_dataloader, model, loss_fn, target_gene)
-        #print(f'Test MSE this epoch is: {test_loss}')
+        test_loss = batch_loss(test_dataloader, model, loss_fn, target_gene)
 
         if (t+1) % 5 == 0:
             print(f"Epoch {t+1}\n-------------------------------")
@@ -173,17 +174,16 @@ for target_gene in gene_expressions.columns:
     results_df.loc[target_gene, 'train_loss'] = train_loss
     results_df.loc[target_gene, 'test_loss'] = test_loss
     results_df.loc[target_gene, 'in_features'] = len(TF_expression_subset.columns)
-    torch.save(model, f'../models/stricter_HEALTHY_models/{target_gene}_model.pth')
-
+    torch.save(model, f'../models/HEALTHY_models/{target_gene}_model.pth')
 
 
 train_actual.to_csv(f'{DATA_ROOT}/Train_dataset_actual_expressions.csv')
-train_predicted.to_csv(f'{DATA_ROOT}/Train_dataset_predicted_expressions_HEALTHY_strict.csv')
+train_predicted.to_csv(f'{DATA_ROOT}/Train_dataset_predicted_expressions_HEALTHY.csv')
 
 test_actual.to_csv(f'{DATA_ROOT}/Test_dataset_actual_expressions.csv')
-test_predicted.to_csv(f'{DATA_ROOT}/Test_dataset_predicted_expressions_HEALTHY_strict.csv')
+test_predicted.to_csv(f'{DATA_ROOT}/Test_dataset_predicted_expressions_HEALTHY.csv')
 
 
-results_df.to_csv('../../data/HEALTHY_strict_results.csv')
+results_df.to_csv('../../data/HEALTHY_results.csv')
 
-print('Finished Healthy (Strict) models all TFs')
+print('Finished Healthy models all TFs')

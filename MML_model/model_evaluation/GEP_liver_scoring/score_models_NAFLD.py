@@ -9,7 +9,7 @@ import sys
 import os
 sys.path.append(os.path.join(os.path.dirname(__file__), '../..'))
 
-from model_building.gene_MSE_all_samples import gene_MSE_all_samples
+from Zhang_lab.MML_model.model_building.batch_loss import gene_MSE_all_samples
 from model_building.customTFGE_dataset import CustomTFGE
 from model_building.simpleMMLModel import SimpleMMLModel
 from model_building.activation_functions import activation_function_map

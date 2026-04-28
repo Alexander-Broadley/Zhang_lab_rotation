@@ -1,5 +1,5 @@
 """
-Defines various activations functions to be used in neural net.
+Defines various activations functions to be used in neural net. - from the LEMBAS authors, only using MML_activation: https://github.com/Lauffenburger-Lab/LEMBAS
 """
 
 import numpy as np
