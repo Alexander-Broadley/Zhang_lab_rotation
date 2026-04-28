@@ -63,6 +63,9 @@ TF_expressions = TF_expressions.T
 #filter network to only include TFs that are in the dataset
 net = net[net['TF'].isin(TF_expressions.columns)]
 
+print(gene_expressions.head())
+print(TF_expressions.head())
+
 print('Filtering genes in datasets')
 #filter genes to nodes in network
 network_tfs = set(net['TF'].unique())      # TFs
@@ -181,6 +184,6 @@ test_actual.to_csv(f'{DATA_ROOT}/Test_dataset_actual_expressions.csv')
 test_predicted.to_csv(f'{DATA_ROOT}/Test_dataset_predicted_expressions_HEALTHY_strict.csv')
 
 
-results_df.to_csv('../data/HEALTHY_strict_results.csv')
+results_df.to_csv('../../data/HEALTHY_strict_results.csv')
 
 print('Finished Healthy (Strict) models all TFs')
