@@ -48,40 +48,6 @@ net = pd.read_csv(f"{DATA_ROOT}/Full data files/network(full).tsv", sep='\t')
 gene_expressions = pd.read_csv((f"{DATA_ROOT}/Full data files/ARCHS4_healthy_log.tsv"), sep='\t', header=0)
 TF_expressions, gene_expressions = filter_datasets(net, GE_df=gene_expressions)
 
-'''
-#gene_expressions = pd.read_csv((f"{DATA_ROOT}/Full data files/Geneexpression (full).tsv"), sep='\t', header=0)
-gene_expressions = pd.read_csv((f"{DATA_ROOT}/archs4/ARCHS4_healthy_TPM_stricter.tsv"), sep='\t', header=0, index_col= 0)
-gene_expressions.reset_index()
-gene_expressions = gene_expressions + 1
-gene_expressions = np.log10(gene_expressions)
-
-#load TF expressions
-#TF_expressions = pd.read_csv((f"{DATA_ROOT}/Full data files/TF(full).tsv"), sep='\t', header=0)
-TF_expressions = pd.read_csv((f"{DATA_ROOT}/archs4/ARCHS4_healthy_TPM_stricter.tsv"), sep='\t', header=0, index_col=0)
-TF_expressions.reset_index()
-TF_expressions = TF_expressions + 1
-TF_expressions = np.log10(TF_expressions)
-
-
-gene_expressions = gene_expressions.T
-TF_expressions = TF_expressions.T
-
-#filter network to only include TFs that are in the dataset
-net = net[net['TF'].isin(TF_expressions.columns)]
-
-print(gene_expressions.head())
-print(TF_expressions.head())
-
-print('Filtering genes in datasets')
-#filter genes to nodes in network
-network_tfs = set(net['TF'].unique())      # TFs
-network_genes = set(net['Gene'].unique())  # target genes
-#network_nodes = network_tfs | network_genes
-TF_expressions = TF_expressions[[gene for gene in TF_expressions.columns if gene in list(network_tfs)]]
-gene_expressions = gene_expressions[[gene for gene in gene_expressions.columns if gene in list(network_genes)]] 
-'''
-
-
 #define function to subset transcription factors to only those that directly regulate the target gene
 def TF_subset(net, target_gene):
     #simpler version as per discussion w/ Cheng
