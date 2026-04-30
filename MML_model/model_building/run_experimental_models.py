@@ -24,7 +24,7 @@ from model_building.activation_functions import activation_function_map
 #import model
 from model_building.simpleMMLModel import SimpleMMLModel
 #import MSE per batch calculator
-from model_building.gene_MSE_all_samples import gene_MSE_all_samples
+from Zhang_lab.MML_model.model_building.batch_loss import gene_MSE_all_samples
 #import function to train a single epoch
 from model_building.train_one_epoch import train_one_epoch
 

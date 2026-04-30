@@ -23,5 +23,4 @@ def train_one_epoch(dataloader, model, loss_fn, optimiser):
 
         loss = loss.item()
         #losses.append(loss)
-
         return(loss)
