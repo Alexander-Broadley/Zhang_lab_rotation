@@ -53,7 +53,6 @@ def TF_subset(net, target_gene):
     #returns all the TFs in the network that directly connect to the target gene
     return(list(net['TF'][net['Gene'] == target_gene]))
 
-
 #define training parameters
 learning_rate = 1e-3
 #run 1 sample at a time, but run through each sample per training epoch
@@ -82,14 +81,17 @@ print('Target gene expressions shape:', gene_expressions.shape)
 #for the remaining code need to execute per target gene (per gene in gene_expressions)
 for target_gene in gene_expressions.columns:
     print(f'Creating model for {target_gene}')
+    
+    #make TF_expression_subset an instance of TF_expressions to handle dropping a TF non-permanently if necessary
+    TF_expression_subset = TF_expressions
     if target_gene in TF_expressions.columns:
         print('Target gene is a TF, removing from TF dataset')
-        TF_expressions.drop(target_gene, axis = 1)
+        TF_expression_subset = TF_expressions.drop(target_gene, axis = 1)
 
     #initialise an early stopper to end training if loss on test data does not fall by at least 0.01 MSE for 3 eopochs in a row
     early_stopping = EarlyStopping(patience=3, delta=0.005, verbose=True)
     
-    TF_expression_subset = TF_expressions#[TF_subset(net, target_gene)]
+    #TF_expression_subset = TF_expressions#[TF_subset(net, target_gene)]
 
     dataset = CustomTFGE(device, TF_expressions=TF_expression_subset, gene_expressions=gene_expressions, network = net, target_gene = target_gene)
     train_dataset, test_dataset = torch.utils.data.random_split(dataset, [0.8, 0.2], generator=torch.Generator().manual_seed(42))
