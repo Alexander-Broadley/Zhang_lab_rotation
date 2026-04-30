@@ -22,7 +22,7 @@ male_meta = pd.read_csv(f'{DATA_ROOT}/ARCHS4_male_healthy_meta.csv', index_col=0
 Gene_expression_data = pd.read_csv(f'{DATA_ROOT}/Full data files/ARCHS4_healthy_RAW.tsv', sep = '\t', index_col=0)
 
 #deseq needs samples as row index
-counts_df = Gene_expression_data.T
+counts_df = Gene_expression_data
 
 #put metadata in correct format for DESEQ (sample IDs are row index, column with condition (here sex) 
 fem_meta['condition'] = 'F'
@@ -42,6 +42,7 @@ metadata = meta_df.loc[samples_to_keep]
 
 
 #subset counts to just the male and female samples
+print(counts_df.head())
 counts_df = counts_df.loc[meta_df.index]
 
 genes_to_keep = counts_df.columns[counts_df.sum(axis=0) >= 10]
@@ -69,7 +70,9 @@ ds.summary()
 if SAVE:
     with open(os.path.join(OUTPUT_PATH, "dds.pkl"), "wb") as f:
         pkl.dump(dds, f)
+    print('Saved base dds object')
 
 if SAVE:
     with open(os.path.join(OUTPUT_PATH, "ds.pkl"), "wb") as f:
         pkl.dump(ds, f)
+    print('Saved DGE summary object')
