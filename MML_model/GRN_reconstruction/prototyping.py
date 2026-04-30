@@ -95,5 +95,5 @@ for target_gene in gene_expressions.columns:
 inferred_GRN = pd.concat(inf_networks_list)
 
 inferred_GRN['Reg'] = np.sign(inferred_GRN['Reg'])
-inferred_GRN.to_csv('inferred_GRN.csv')
+inferred_GRN.to_csv('./data/inferred_GRN.csv')
 
