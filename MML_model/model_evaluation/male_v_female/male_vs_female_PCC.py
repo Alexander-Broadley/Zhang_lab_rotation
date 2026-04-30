@@ -75,7 +75,7 @@ male_predicted = pd.DataFrame(index = male_TF_expressions.index, columns= male_T
 
 
 #just choose one of the target gene datasets - should both have the same columns
-for target_gene in female_gene_expressions.columns[0:1]:
+for target_gene in female_gene_expressions.columns:
     print(f'Generating scores for {target_gene} model')
     #if target gene is a TF for female will be a TF for male too
     if target_gene in female_TF_expressions.columns:
