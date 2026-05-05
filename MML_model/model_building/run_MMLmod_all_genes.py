@@ -45,6 +45,11 @@ net = pd.read_csv(f"{DATA_ROOT}/Full data files/network(full).tsv", sep='\t')
 
 #try new filtering function
 gene_expressions = pd.read_csv((f"{DATA_ROOT}/Full data files/ARCHS4_healthy_log.tsv"), sep='\t', header=0)
+
+#for sensitivity analysis take 5000 random samples 
+gene_expressions = gene_expressions.sample(2500)
+print(f'Subsampled df shape is: {gene_expressions.shape}')
+
 TF_expressions, gene_expressions = filter_datasets(net, GE_df=gene_expressions)
 
 #define function to subset transcription factors to only those that directly regulate the target gene
@@ -111,7 +116,7 @@ for target_gene in gene_expressions.columns:
 
     for t in range(epochs):
         train_loss = train_one_epoch(train_dataloader, model, loss_fn, optimiser)
-        test_loss = batch_loss(test_dataloader, model, loss_fn, target_gene)
+        test_loss = batch_loss(test_dataloader, model, loss_fn)
 
         if (t+1) % 5 == 0:
             print(f"Epoch {t+1}\n-------------------------------")
@@ -141,16 +146,16 @@ for target_gene in gene_expressions.columns:
     results_df.loc[target_gene, 'train_loss'] = train_loss
     results_df.loc[target_gene, 'test_loss'] = test_loss
     results_df.loc[target_gene, 'in_features'] = len(TF_expression_subset.columns)
-    torch.save(model, f'../models/HEALTHY_models/{target_gene}_model.pth')
+    torch.save(model, f'../models/2500_sample_models/{target_gene}_model.pth')
 
 
-train_actual.to_csv(f'{DATA_ROOT}/Train_dataset_actual_expressions.csv')
-train_predicted.to_csv(f'{DATA_ROOT}/Train_dataset_predicted_expressions_HEALTHY.csv')
+train_actual.to_csv(f'{DATA_ROOT}/Train_dataset_actual_expressions_2500_samples.csv')
+train_predicted.to_csv(f'{DATA_ROOT}/Train_dataset_predicted_expressions_2500_samples.csv')
 
-test_actual.to_csv(f'{DATA_ROOT}/Test_dataset_actual_expressions.csv')
-test_predicted.to_csv(f'{DATA_ROOT}/Test_dataset_predicted_expressions_HEALTHY.csv')
+test_actual.to_csv(f'{DATA_ROOT}/Test_dataset_actual_expressions_2500_samples.csv')
+test_predicted.to_csv(f'{DATA_ROOT}/Test_dataset_predicted_expressions_2500_samples.csv')
 
 
-results_df.to_csv('../../data/HEALTHY_results.csv')
+results_df.to_csv('../../data/2500_samples_results.csv')
 
 print('Finished Healthy models all TFs')
