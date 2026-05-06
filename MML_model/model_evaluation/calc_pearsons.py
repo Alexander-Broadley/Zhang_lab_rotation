@@ -6,11 +6,11 @@ import matplotlib.pyplot as plt
 
 from sklearn.metrics import mean_squared_error
 
-DATA_ROOT = '../data'
+DATA_ROOT = '../../data'
 FIGURE_ROOT = './figures'
 
 #determines which set of models to use
-suffix = '_HEALTHY'
+suffix = '_EXPERIMENTAL'
 
 #======================================================================
 #load expressions datasets
@@ -19,27 +19,22 @@ suffix = '_HEALTHY'
 print('Loading Datasets')
 
 train_predicted_TPM = pd.read_csv(f"{DATA_ROOT}/Train_dataset_predicted_expressions{suffix}.csv", index_col=0, header=0)
-train_actual_TPM = pd.read_csv(f"{DATA_ROOT}/Train_dataset_actual_expressions.csv", index_col=0, header=0)
+train_actual_TPM = pd.read_csv(f"{DATA_ROOT}/Train_dataset_actual_expressions{suffix}.csv", index_col=0, header=0)
 
 test_predicted_TPM = pd.read_csv(f"{DATA_ROOT}/Test_dataset_predicted_expressions{suffix}.csv", index_col=0, header=0)
-test_actual_TPM = pd.read_csv(f"{DATA_ROOT}/Test_dataset_actual_expressions.csv", index_col=0, header=0)
+test_actual_TPM = pd.read_csv(f"{DATA_ROOT}/Test_dataset_actual_expressions{suffix}.csv", index_col=0, header=0)
 
-#external_actual_TPM = pd.read_csv(f"{DATA_ROOT}/Full data files/liver_bulk_external.tsv", sep = '\t', index_col=0, header=0)
-#external_predicted_TPM = pd.read_csv(f"{DATA_ROOT}/external_dataset_predicted_expressions{suffix}.csv", index_col=0, header=0)
+external_actual_TPM = pd.read_csv(f"{DATA_ROOT}/Full data files/Liver_bulk_external.tsv", sep = '\t', index_col=0, header=0)
+external_predicted_TPM = pd.read_csv(f"{DATA_ROOT}/external_predicted_expressions{suffix}.csv", index_col=0, header=0)
 
 #remove columns for genes that no models exist for
 #external_predicted_TPM.drop(['SHOX', 'ZBED1'], axis = 1, inplace = True)
 
 #temporary before fixing code for external model creation - drop all NA columns
 #external_predicted_TPM = external_predicted_TPM.dropna(axis=1, how='all')
+external_actual_TPM = external_actual_TPM[external_predicted_TPM.columns]
 
 #ensure column indexes (genes) are in the same order across datasets
-
-#for healthy models only
-
-train_predicted_TPM['F8A1', 'H2AC18', 'H2AC19', 'HLA-DRB3', 'HLA-DRB4', 'HOMEZ', 'PRRC2B', 'SLC9A3R1', 'SLC9A3R2', 'SOD2', 'TDGF1', 'UGT1A3']
-
-
 train_actual_TPM = test_actual_TPM[train_predicted_TPM.columns]
 test_actual_TPM = test_actual_TPM[test_predicted_TPM.columns]
 #external_actual_TPM = external_actual_TPM[external_predicted_TPM.columns]

@@ -36,15 +36,18 @@ print('Loading and filtering datasets')
 external_expressions = pd.read_csv(f'{DATA_ROOT}/Full data files/Liver_bulk_external.tsv', index_col = 0, sep = '\t')
 
 #imput missing genes as 0 - discuss w/ Cheng at next opportunity
-external_expressions['SHOX'] = 0
-external_expressions['ZBED1'] = 0
-external_expressions['ARNTL'] = 0
-external_expressions['HOMEZ'] = 0
+#external_expressions['SHOX'] = 0
+#external_expressions['ZBED1'] = 0
+#external_expressions['ARNTL'] = 0
+#external_expressions['HOMEZ'] = 0
 
 #Load network
 net = pd.read_csv(f"{DATA_ROOT}/Full data files/network(full).tsv", sep='\t')
 #Load ARCHS4 gene expressions
 gene_expressions = pd.read_csv((f"{DATA_ROOT}/Full data files/ARCHS4_healthy_log.tsv"), sep='\t', header=0)
+#filter as in experimental models (using only genes in both datasets)
+gene_expressions = gene_expressions[[gene for gene in gene_expressions.columns if gene in external_expressions.columns]]
+external_expressions = external_expressions[gene_expressions.columns]
 
 from model_building.filter_dataset import filter_datasets
 orig_GE, orig_TF = filter_datasets(net, gene_expressions)
@@ -53,13 +56,10 @@ orig_TFs = list(orig_TF.columns)
 
 TF_expressions, gene_expressions = filter_datasets(net, external_expressions)
 
-
-
-
 print(f'there are {len(orig_TFs)} TFs and {len(orig_GEs)} in the original dataset')
-
 print(f'before TF has {TF_expressions.shape}')
 
+'''
 #external expression dataset is smaller than the original - for now add all as zeros but may need to retrain on less genes
 for gene in orig_GEs:
     if gene not in gene_expressions.columns:
@@ -76,6 +76,7 @@ gene_expressions = external_expressions[[gene for gene in gene_expressions.colum
 print(f'now TF has {TF_expressions.shape}')
 
 print(TF_expressions.shape)
+'''
 print(gene_expressions.shape)
 
 
@@ -107,13 +108,14 @@ for target_gene in gene_expressions.columns:
     else:
         TF_expression_subset = TF_expressions
 
-    model = SimpleMMLModel(activation_function_map['MML'], TF_expression_subset.shape[1])
-    model.to(device)
+    #model = SimpleMMLModel(activation_function_map['MML'], TF_expression_subset.shape[1])
+    
 
     dataset = CustomTFGE(device, TF_expressions=TF_expression_subset, gene_expressions= gene_expressions, network = net, target_gene = target_gene)
     #shouldn't need this anymore - fixed model saving issue
 
-    model = torch.load(f"{MODEL_ROOT}/HEALTHY_models/{target_gene}_model.pth", weights_only = False)
+    model = torch.load(f"{MODEL_ROOT}/experimental_models/{target_gene}_model.pth", weights_only = False)
+    model.to(device)
     eval_dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=False)
     results_df.loc[target_gene, 'external_loss'] = batch_loss(eval_dataloader, model, loss_fn)
     model.eval()
@@ -129,4 +131,4 @@ print(f'{len(missing_models)} are missing')
 
 print('Writing results')
 results_df.to_csv('data/external_HEALTHY_PCC.csv')
-external_predicted.to_csv(f'{DATA_ROOT}/external_HEALTHY_predicted_expressions.csv')
+external_predicted.to_csv(f'{DATA_ROOT}/external_predicted_expressions_EXPERIMENTAL.csv')
