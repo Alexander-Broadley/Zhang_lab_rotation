@@ -47,7 +47,7 @@ net = pd.read_csv(f"{DATA_ROOT}/Full data files/network(full).tsv", sep='\t')
 gene_expressions = pd.read_csv((f"{DATA_ROOT}/Full data files/ARCHS4_healthy_log.tsv"), sep='\t', header=0)
 
 #for sensitivity analysis take 5000 random samples 
-gene_expressions = gene_expressions.sample(1000)
+gene_expressions = gene_expressions.sample(4000)
 print(f'Subsampled df shape is: {gene_expressions.shape}')
 
 TF_expressions, gene_expressions = filter_datasets(net, GE_df=gene_expressions)
@@ -146,16 +146,16 @@ for target_gene in gene_expressions.columns:
     results_df.loc[target_gene, 'train_loss'] = train_loss
     results_df.loc[target_gene, 'test_loss'] = test_loss
     results_df.loc[target_gene, 'in_features'] = len(TF_expression_subset.columns)
-    torch.save(model, f'../models/2500_sample_models/{target_gene}_model.pth')
+    torch.save(model, f'../models/4000_sample_models/{target_gene}_model.pth')
 
 
-train_actual.to_csv(f'{DATA_ROOT}/Train_dataset_actual_expressions_1000_samples.csv')
-train_predicted.to_csv(f'{DATA_ROOT}/Train_dataset_predicted_expressions_1000_samples.csv')
+train_actual.to_csv(f'{DATA_ROOT}/Train_dataset_actual_expressions_4000_samples.csv')
+train_predicted.to_csv(f'{DATA_ROOT}/Train_dataset_predicted_expressions_4000_samples.csv')
 
-test_actual.to_csv(f'{DATA_ROOT}/Test_dataset_actual_expressions_1000_samples.csv')
-test_predicted.to_csv(f'{DATA_ROOT}/Test_dataset_predicted_expressions_1000_samples.csv')
+test_actual.to_csv(f'{DATA_ROOT}/Test_dataset_actual_expressions_4000_samples.csv')
+test_predicted.to_csv(f'{DATA_ROOT}/Test_dataset_predicted_expressions_4000_samples.csv')
 
 
-results_df.to_csv('../../data/1000_samples_results.csv')
+results_df.to_csv('../../data/4000_samples_results.csv')
 
-print('Finished 1000 sample models')
+print('Finished 4000 sample models')

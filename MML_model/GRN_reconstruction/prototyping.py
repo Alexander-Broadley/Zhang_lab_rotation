@@ -45,17 +45,18 @@ batch_size = 1
 for target_gene in gene_expressions.columns:
     print(f'Processing {target_gene} model')
 
+    #target gene must be removed from it's own prediction on a per-target basis
+    TF_expression_subset = TF_expressions
+    if target_gene in TF_expressions.columns:
+        TF_expression_subset = TF_expressions.drop(target_gene, axis = 1)
+
     dataset = CustomTFGE(device, TF_expressions=TF_expressions, gene_expressions=gene_expressions, network = net, target_gene = target_gene)
 
     model = torch.load(f"{MODEL_ROOT}/HEALTHY_models/{target_gene}_model.pth", weights_only = False)
     eval_dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=False)
     model.eval()
 
-    #target gene must be removed from it's own prediction on a per-target basis
-    TF_expression_subset = TF_expressions
-    if target_gene in TF_expressions.columns:
-        print('Target gene is a TF, removing from TF dataset')
-        TF_expression_subset = TF_expressions.drop(target_gene, axis = 1)
+
 
     TF_in_model = list(TF_expression_subset.columns)
 
@@ -78,9 +79,9 @@ for target_gene in gene_expressions.columns:
         for batch, (X, y) in enumerate(eval_dataloader):  
             #this gets the indexes of all TFs post-activation that have a value < 0.5 and adds one to the corresponding index in threshold tracker   
             threshold_index = np.where(np.asarray((model(X).cpu() * np.asarray(param_df['in_weight']) + np.asarray(param_df['in_bias']))) > 0.5)
-            
             threshold_tracker[threshold_index] += 1
-        regulating_index = np.where(threshold_tracker > (len(dataset) * 0.99) )
+
+        regulating_index = np.where(threshold_tracker == len(dataset))
 
         past_thresh_tfs = param_df.loc[regulating_index]['TF']
         past_thresh_reg = param_df.loc[regulating_index]['out_weight']

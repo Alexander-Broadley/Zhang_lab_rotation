@@ -43,11 +43,16 @@ print('Loaded Datasets')
 
 
 #remove columns for genes that no models exist for
-train_predicted_TPM = train_predicted_TPM.dropna(axis=1, how='all')
-train_actual_TPM = train_actual_TPM.dropna(axis=1, how='all')
-test_predicted_TPM = test_predicted_TPM.dropna(axis=1, how='all')
-test_actual_TPM = test_actual_TPM.dropna(axis=1, how='all')
+#train_predicted_TPM = train_predicted_TPM.dropna(axis=1, how='all')
+#train_actual_TPM = train_actual_TPM.dropna(axis=1, how='all')
+#test_predicted_TPM = test_predicted_TPM.dropna(axis=1, how='all')
+#test_actual_TPM = test_actual_TPM.dropna(axis=1, how='all')
 #external_actual_TPM = external_actual_TPM.dropna(axis=1, how='all')
+
+print('Train pred shape')
+print(train_predicted_TPM.shape)
+print('Train actual shape')
+print(train_actual_TPM.shape)
 
 #======================================================================
 #calculate sample wise correlation values
@@ -137,7 +142,7 @@ print('Calculating Samplewise Correlations')
 samplewise_df_list = []
 samplewise_df_list.append(get_correlations_df(train_actual_TPM, train_predicted_TPM, dataset_label='Train', rowise = True))
 samplewise_df_list.append(get_correlations_df(test_actual_TPM, test_predicted_TPM, dataset_label='Test', rowise = True))
-#samplewise_df_list.append(get_correlations_df(external_actual_TPM, external_predicted_TPM, dataset_label='External', rowise = True))
+samplewise_df_list.append(get_correlations_df(external_actual_TPM, external_predicted_TPM, dataset_label='External', rowise = True))
 
 samplewise_correlations = pd.concat(samplewise_df_list, ignore_index = True)
 #create_pearsons_violin(results_df=samplewise_correlations, title = 'Samplewise Pearsons Correlations for TPM models', file_title='samplewise_pearsons_TPM')
