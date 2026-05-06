@@ -46,17 +46,18 @@ for target_gene in gene_expressions.columns:
     print(f'Processing {target_gene} model')
 
     #target gene must be removed from it's own prediction on a per-target basis
-    TF_expression_subset = TF_expressions
     if target_gene in TF_expressions.columns:
+        print('Target gene is a TF, removing from TF dataset')
         TF_expression_subset = TF_expressions.drop(target_gene, axis = 1)
+    else:
+        TF_expression_subset = TF_expressions
+
 
     dataset = CustomTFGE(device, TF_expressions=TF_expressions, gene_expressions=gene_expressions, network = net, target_gene = target_gene)
 
     model = torch.load(f"{MODEL_ROOT}/HEALTHY_models/{target_gene}_model.pth", weights_only = False)
     eval_dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=False)
     model.eval()
-
-
 
     TF_in_model = list(TF_expression_subset.columns)
 

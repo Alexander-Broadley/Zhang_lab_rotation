@@ -90,11 +90,12 @@ print('Target gene expressions shape:', gene_expressions.shape)
 for target_gene in gene_expressions.columns:
     print(f'Creating model for {target_gene}')
     
-    #make TF_expression_subset an instance of TF_expressions to handle dropping a TF non-permanently if necessary
-    TF_expression_subset = TF_expressions
+    #target gene must be removed from it's own prediction on a per-target basis
     if target_gene in TF_expressions.columns:
         print('Target gene is a TF, removing from TF dataset')
         TF_expression_subset = TF_expressions.drop(target_gene, axis = 1)
+    else:
+        TF_expression_subset = TF_expressions
 
     #initialise an early stopper to end training if loss on test data does not fall by at least 0.01 MSE for 3 eopochs in a row
     early_stopping = EarlyStopping(patience=3, delta=0.005, verbose=True)

@@ -28,6 +28,15 @@ external_actual_TPM = pd.read_csv(f"{DATA_ROOT}/Full data files/Liver_bulk_exter
 external_predicted_TPM = pd.read_csv(f"{DATA_ROOT}/external_predicted_expressions{suffix}.csv", index_col=0, header=0)
 
 #remove columns for genes that no models exist for
+train_predicted_TPM = train_predicted_TPM.dropna(axis=1, how='all')
+train_actual_TPM = train_actual_TPM.dropna(axis=1, how='all')
+test_predicted_TPM = test_predicted_TPM.dropna(axis=1, how='all')
+test_actual_TPM = test_actual_TPM.dropna(axis=1, how='all')
+external_predicted_TPM = external_actual_TPM.dropna(axis=1, how='all')
+external_actual_TPM = external_actual_TPM.dropna(axis=1, how='all')
+
+
+#remove columns for genes that no models exist for
 #external_predicted_TPM.drop(['SHOX', 'ZBED1'], axis = 1, inplace = True)
 
 #temporary before fixing code for external model creation - drop all NA columns
@@ -37,22 +46,11 @@ external_actual_TPM = external_actual_TPM[external_predicted_TPM.columns]
 #ensure column indexes (genes) are in the same order across datasets
 train_actual_TPM = test_actual_TPM[train_predicted_TPM.columns]
 test_actual_TPM = test_actual_TPM[test_predicted_TPM.columns]
-#external_actual_TPM = external_actual_TPM[external_predicted_TPM.columns]
-
+external_actual_TPM = external_actual_TPM[external_predicted_TPM.columns]
 print('Loaded Datasets')
 
-
-#remove columns for genes that no models exist for
-#train_predicted_TPM = train_predicted_TPM.dropna(axis=1, how='all')
-#train_actual_TPM = train_actual_TPM.dropna(axis=1, how='all')
-#test_predicted_TPM = test_predicted_TPM.dropna(axis=1, how='all')
-#test_actual_TPM = test_actual_TPM.dropna(axis=1, how='all')
-#external_actual_TPM = external_actual_TPM.dropna(axis=1, how='all')
-
-print('Train pred shape')
-print(train_predicted_TPM.shape)
-print('Train actual shape')
-print(train_actual_TPM.shape)
+print(external_actual_TPM.head())
+print(external_predicted_TPM.head())
 
 #======================================================================
 #calculate sample wise correlation values
