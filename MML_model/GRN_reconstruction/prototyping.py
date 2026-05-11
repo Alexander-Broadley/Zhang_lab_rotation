@@ -82,7 +82,7 @@ for target_gene in gene_expressions.columns:
                 print(X.shape)
                 print(len(np.asarray(param_df['in_weight'])))
             #this gets the indexes of all TFs post-activation that have a value < 0.5 and adds one to the corresponding index in threshold tracker   
-            threshold_index = np.where(np.asarray((model(X).cpu() * np.asarray(param_df['in_weight']) + np.asarray(param_df['in_bias']))) > 0.8)
+            threshold_index = np.where(np.asarray((model(X).cpu() * np.asarray(param_df['in_weight']) + np.asarray(param_df['in_bias']))) >= 1)
             threshold_tracker[threshold_index] += 1
 
         regulating_index = np.where(threshold_tracker == len(dataset))
@@ -100,4 +100,4 @@ for target_gene in gene_expressions.columns:
 inferred_GRN = pd.concat(inf_networks_list)
 
 inferred_GRN['Reg'] = np.sign(inferred_GRN['Reg'])
-inferred_GRN.to_csv('./data/80per_act_inferred_GRN.csv')
+inferred_GRN.to_csv('./data/100per_act_inferred_GRN.csv')
