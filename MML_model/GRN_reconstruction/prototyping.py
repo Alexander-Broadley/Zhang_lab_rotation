@@ -53,7 +53,7 @@ for target_gene in gene_expressions.columns:
         TF_expression_subset = TF_expressions
 
 
-    dataset = CustomTFGE(device, TF_expressions=TF_expressions, gene_expressions=gene_expressions, network = net, target_gene = target_gene)
+    dataset = CustomTFGE(device, TF_expressions=TF_expression_subset, gene_expressions=gene_expressions, network = net, target_gene = target_gene)
 
     model = torch.load(f"{MODEL_ROOT}/HEALTHY_models/{target_gene}_model.pth", weights_only = False)
     eval_dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=False)
@@ -78,8 +78,11 @@ for target_gene in gene_expressions.columns:
         #create an empty numpy array that keeps track of how many times each input TF has a post-activation value past a threshold
         threshold_tracker = np.zeros(shape = len(TF_in_model))
         for batch, (X, y) in enumerate(eval_dataloader):  
+            if target_gene == 'ADNP':
+                print(X.shape)
+                print(len(np.asarray(param_df['in_weight'])))
             #this gets the indexes of all TFs post-activation that have a value < 0.5 and adds one to the corresponding index in threshold tracker   
-            threshold_index = np.where(np.asarray((model(X).cpu() * np.asarray(param_df['in_weight']) + np.asarray(param_df['in_bias']))) > 0.5)
+            threshold_index = np.where(np.asarray((model(X).cpu() * np.asarray(param_df['in_weight']) + np.asarray(param_df['in_bias']))) > 0.8)
             threshold_tracker[threshold_index] += 1
 
         regulating_index = np.where(threshold_tracker == len(dataset))
@@ -97,5 +100,4 @@ for target_gene in gene_expressions.columns:
 inferred_GRN = pd.concat(inf_networks_list)
 
 inferred_GRN['Reg'] = np.sign(inferred_GRN['Reg'])
-inferred_GRN.to_csv('./data/inferred_GRN.csv')
-
+inferred_GRN.to_csv('./data/80per_act_inferred_GRN.csv')

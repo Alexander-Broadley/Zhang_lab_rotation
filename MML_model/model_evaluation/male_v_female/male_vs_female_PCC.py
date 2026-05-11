@@ -39,8 +39,8 @@ from model_building.filter_dataset import filter_datasets
 gene_expressions = pd.read_csv((f"{DATA_ROOT}/Full data files/ARCHS4_healthy_log.tsv"), sep='\t', header=0, index_col=0)
 
 #load male and female metadata
-female_sample_IDs = pd.read_csv(f'{DATA_ROOT}/ARCHS4_female_healthy_meta.csv', index_col=0).index
-male_sample_IDs = pd.read_csv(f'{DATA_ROOT}/ARCHS4_male_healthy_meta.csv', index_col=0).index
+female_sample_IDs = pd.read_csv(f'{DATA_ROOT}/Full data files/ARCHS4_female_external_meta.csv', index_col=0).index
+male_sample_IDs = pd.read_csv(f'{DATA_ROOT}/Full data files/ARCHS4_male_external_meta.csv', index_col=0).index
 
 #split the datasets into male and female before indexes are reset
 female_expressions = gene_expressions.loc[female_sample_IDs]
@@ -48,6 +48,9 @@ male_expressions = gene_expressions.loc[male_sample_IDs]
 
 female_TF_expressions, female_gene_expressions = filter_datasets(net, GE_df=female_expressions)
 male_TF_expressions, male_gene_expressions = filter_datasets(net, GE_df=male_expressions)
+
+assert list(female_TF_expressions.columns) == list(male_TF_expressions.columns)
+assert list(female_gene_expressions.columns) == list(male_gene_expressions.columns)
 
 #filter out male and female samples
 print(female_TF_expressions.shape, female_gene_expressions.shape)
@@ -84,12 +87,13 @@ for target_gene in female_gene_expressions.columns:
         male_TFs_to_use = male_TF_expressions.drop(target_gene, axis = 1)
 
         #create dataset objects
-        female_dataset = CustomTFGE(device, TF_expressions=female_TFs_to_use, gene_expressions=male_gene_expressions, network = net, target_gene = target_gene)
+        female_dataset = CustomTFGE(device, TF_expressions=female_TFs_to_use, gene_expressions=female_gene_expressions, network = net, target_gene = target_gene)
         male_dataset = CustomTFGE(device, TF_expressions=male_TFs_to_use, gene_expressions=male_gene_expressions, network = net, target_gene = target_gene)
     else:
         #if target gene not a TF then don't need to remove anything
-        female_dataset = CustomTFGE(device, TF_expressions=female_TF_expressions, gene_expressions=male_gene_expressions, network = net, target_gene = target_gene)
+        female_dataset = CustomTFGE(device, TF_expressions=female_TF_expressions, gene_expressions=female_gene_expressions, network = net, target_gene = target_gene)
         male_dataset = CustomTFGE(device, TF_expressions=male_TF_expressions, gene_expressions=male_gene_expressions, network = net, target_gene = target_gene)
+
 
     #wrap dataset objects in DataLoader iterable
     female_dataloader = DataLoader(female_dataset, batch_size=len(female_dataset), shuffle=False)
@@ -99,11 +103,11 @@ for target_gene in female_gene_expressions.columns:
     model = torch.load(f"{MODEL_ROOT}/HEALTHY_models/{target_gene}_model.pth", weights_only = False)
     model.to(device)
     
-    print(f'Getting PCC for {target_gene} model')
+    #print(f'Getting PCC for {target_gene} model')
 
     #for both dataloaders load all samples (batch size is the same as the length of the dataset), get the batch loss for each
-    results_df.loc[target_gene, 'female_PCC'] = 1 - batch_loss(female_dataloader, model, loss_fn, target_gene)   
-    results_df.loc[target_gene, 'male_PCC'] = 1 - batch_loss(male_dataloader, model, loss_fn, target_gene)
+    results_df.loc[target_gene, 'female_PCC'] = 1 - batch_loss(female_dataloader, model, loss_fn)   
+    results_df.loc[target_gene, 'male_PCC'] = 1 - batch_loss(male_dataloader, model, loss_fn)
 
     model.eval()
     with torch.no_grad():
@@ -117,5 +121,7 @@ for target_gene in female_gene_expressions.columns:
 
 male_predicted.to_csv(f'{DATA_ROOT}/male_predicted_gene_expressions.csv')
 female_predicted.to_csv(f'{DATA_ROOT}/female_predicted_gene_expressions.csv')
+male_actual.to_csv(f'{DATA_ROOT}/male_actual_gene_expressions.csv')
+female_actual.to_csv(f'{DATA_ROOT}/female_actual_gene_expressions.csv')
 
 results_df.to_csv(f'{DATA_ROOT}/female_male_PCC.csv')
