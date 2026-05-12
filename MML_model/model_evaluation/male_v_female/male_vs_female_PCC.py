@@ -100,7 +100,7 @@ for target_gene in female_gene_expressions.columns:
     male_dataloader = DataLoader(male_dataset, batch_size=len(male_dataset), shuffle=False)
 
     #load desired models
-    model = torch.load(f"{MODEL_ROOT}/HEALTHY_models/{target_gene}_model.pth", weights_only = False)
+    model = torch.load(f"{MODEL_ROOT}/MF_external_models/{target_gene}_model.pth", weights_only = False)
     model.to(device)
     
     #print(f'Getting PCC for {target_gene} model')
