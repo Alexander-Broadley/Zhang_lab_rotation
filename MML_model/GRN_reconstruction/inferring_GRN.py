@@ -33,7 +33,14 @@ net = pd.read_csv(f"{DATA_ROOT}/Full data files/network(full).tsv", sep='\t')
 #Load target gene expressions
 
 #try new filtering function
-gene_expressions = pd.read_csv((f"{DATA_ROOT}/Full data files/ARCHS4_healthy_log.tsv"), sep='\t', header=0)
+gene_expressions = pd.read_csv((f"{DATA_ROOT}/Full data files/ARCHS4_healthy_log.tsv"), sep='\t', header=0, index_col = 0)
+print(gene_expressions.head())
+male_meta =  pd.read_csv(f"{DATA_ROOT}/Full data files/ARCHS4_male_healthy_meta.csv", index_col = 0)
+print(male_meta.head())
+gene_expressions = gene_expressions.loc[male_meta.index]
+
+
+print(gene_expressions.head())
 TF_expressions, gene_expressions = filter_datasets(net, GE_df=gene_expressions)
 
 #create array to store dataframes of each target genes regulation for concatenation
@@ -99,5 +106,5 @@ for target_gene in gene_expressions.columns:
 
 inferred_GRN = pd.concat(inf_networks_list)
 
-inferred_GRN['Reg'] = np.sign(inferred_GRN['Reg'])
-inferred_GRN.to_csv('./data/100per_act_inferred_GRN.csv')
+#inferred_GRN['Reg'] = np.sign(inferred_GRN['Reg'])
+inferred_GRN.to_csv('./data/100per_act_inferred_GRN_MALE.csv')
