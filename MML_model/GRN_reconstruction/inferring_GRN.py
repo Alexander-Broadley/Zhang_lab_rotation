@@ -35,7 +35,7 @@ net = pd.read_csv(f"{DATA_ROOT}/Full data files/network(full).tsv", sep='\t')
 #try new filtering function
 gene_expressions = pd.read_csv((f"{DATA_ROOT}/Full data files/ARCHS4_healthy_log.tsv"), sep='\t', header=0, index_col = 0)
 print(gene_expressions.head())
-male_meta =  pd.read_csv(f"{DATA_ROOT}/Full data files/ARCHS4_female_healthy_meta.csv", index_col = 0)
+male_meta =  pd.read_csv(f"{DATA_ROOT}/Full data files/ARCHS4_male_healthy_meta.csv", index_col = 0)
 print(male_meta.head())
 gene_expressions = gene_expressions.loc[male_meta.index]
 
@@ -86,7 +86,7 @@ for target_gene in gene_expressions.columns:
         threshold_tracker = np.zeros(shape = len(TF_in_model))
         for batch, (X, y) in enumerate(eval_dataloader):  
             #this gets the indexes of all TFs post-activation that have a value < 0.5 and adds one to the corresponding index in threshold tracker   
-            threshold_index = np.where(np.asarray(X.cpu() * np.asarray(param_df['in_weight']) + np.asarray(param_df['in_bias'])) >= 1)
+            threshold_index = np.where(np.asarray(X.cpu() * np.asarray(param_df['in_weight']) + np.asarray(param_df['in_bias'])).flatten() >= 1)
             threshold_tracker[threshold_index] += 1
 
         regulating_index = np.where(threshold_tracker == len(dataset))
@@ -104,5 +104,5 @@ for target_gene in gene_expressions.columns:
 inferred_GRN = pd.concat(inf_networks_list)
 
 #inferred_GRN['Reg'] = np.sign(inferred_GRN['Reg'])
-inferred_GRN.to_csv('./data/100per_act_inferred_GRN_FEMALE.csv')
-print('Finished and saved female GRNs')
+inferred_GRN.to_csv('./data/100per_act_inferred_GRN_MALE.csv')
+print('Finished and saved male GRNs')
