@@ -85,11 +85,8 @@ for target_gene in gene_expressions.columns:
         #create an empty numpy array that keeps track of how many times each input TF has a post-activation value past a threshold
         threshold_tracker = np.zeros(shape = len(TF_in_model))
         for batch, (X, y) in enumerate(eval_dataloader):  
-            if target_gene == 'ADNP':
-                print(X.shape)
-                print(len(np.asarray(param_df['in_weight'])))
             #this gets the indexes of all TFs post-activation that have a value < 0.5 and adds one to the corresponding index in threshold tracker   
-            threshold_index = np.where(np.asarray((model(X).cpu() * np.asarray(param_df['in_weight']) + np.asarray(param_df['in_bias']))) >= 1)
+            threshold_index = np.where(np.asarray(X.cpu() * np.asarray(param_df['in_weight']) + np.asarray(param_df['in_bias'])) >= 1)
             threshold_tracker[threshold_index] += 1
 
         regulating_index = np.where(threshold_tracker == len(dataset))
