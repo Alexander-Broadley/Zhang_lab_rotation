@@ -97,8 +97,6 @@ for target_gene in gene_expressions.columns:
     #initialise an early stopper to end training if loss on test data does not fall by at least 0.01 MSE for 3 eopochs in a row
     early_stopping = EarlyStopping(patience=3, delta=0.005, verbose=True)
     
-    #TF_expression_subset = TF_expressions#[TF_subset(net, target_gene)]
-
     dataset = CustomTFGE(device, TF_expressions=TF_expression_subset, gene_expressions=gene_expressions, network = net, target_gene = target_gene)
     train_dataset, test_dataset = torch.utils.data.random_split(dataset, [0.8, 0.2], generator=torch.Generator().manual_seed(42))
 
