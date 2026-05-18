@@ -51,6 +51,7 @@ gene_expressions = pd.read_csv((f"{DATA_ROOT}/Full data files/ARCHS4_healthy_log
 #print(f'Subsampled df shape is: {gene_expressions.shape}')
 
 TF_expressions, gene_expressions = filter_datasets(net, GE_df=gene_expressions)
+print(gene_expressions.shape)
 
 #define function to subset transcription factors to only those that directly regulate the target gene
 def TF_subset(net, target_gene):
