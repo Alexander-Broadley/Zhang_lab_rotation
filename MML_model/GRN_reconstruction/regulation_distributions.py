@@ -34,10 +34,10 @@ net = pd.read_csv(f"{DATA_ROOT}/Full data files/network(full).tsv", sep='\t')
 #Load target gene expressions
 
 #try new filtering function
-gene_expressions = pd.read_csv((f"{DATA_ROOT}/Full data files/ARCHS4_healthy_TPM_stricter.tsv"), sep='\t', header=0, index_col = 0).T
-#male_meta =  pd.read_csv(f"{DATA_ROOT}/Full data files/ARCHS4_female_healthy_meta.csv", index_col = 0)
-#print(male_meta.head())
-#gene_expressions = gene_expressions.loc[male_meta.index]
+gene_expressions = pd.read_csv((f"{DATA_ROOT}/Full data files/ARCHS4_healthy_log.tsv"), sep='\t', header=0, index_col = 0)
+male_meta =  pd.read_csv(f"{DATA_ROOT}/Full data files/ARCHS4_male_healthy_meta.csv", index_col = 0)
+print(male_meta.head())
+gene_expressions = gene_expressions.loc[male_meta.index]
 
 
 
@@ -66,13 +66,10 @@ for target_gene in gene_expressions.columns:
     #create dataframe to store contributions
     contributions_df = pd.DataFrame(columns = gene_expressions.columns)
 
-    
-
-
     dataset = CustomTFGE(device, TF_expressions=TF_expression_subset, gene_expressions=gene_expressions, network = net, target_gene = target_gene)
 
-    model = torch.load(f"{MODEL_ROOT}/HEALTHY_models/{target_gene}_model.pth", weights_only = False)
-    eval_dataloader = DataLoader(dataset, batch_size=len(dataset), shuffle=False)
+    model = torch.load(f"{MODEL_ROOT}/MF_external_models/{target_gene}_model.pth", weights_only = False)
+    eval_dataloader = DataLoader(dataset, batch_size=1, shuffle=False)
     model.eval()
 
     '''
@@ -94,8 +91,11 @@ for target_gene in gene_expressions.columns:
     with torch.no_grad():
         #this gets the indexes of all TFs post-activation that have a value < 0.5 and adds one to the corresponding index in threshold tracker 
         for batch, (X, y) in enumerate(eval_dataloader):
+            print(X.shape)
+            print(model.module.linear_in.weight.shape)
             #contributions = (np.asarray(X.cpu() * np.asarray(param_df['in_weight']) + np.asarray(param_df['in_bias'])))
-            contributions = (activation_function((X * model.linear_in.weight) + model.linear_in.bias, leak = 0.01) * model.linear_out.weight) + model.linear_out.bias.data
+            contributions = (activation_function((X * model.module.linear_in.weight) + model.module.linear_in.bias, leak = 0.01) * model.module.linear_out.weight) + model.module.linear_out.bias.data
             contributions_df[batch] = contributions
+    print(contributions_df.head())
     
-    contributions_df.to_csv(f'./data/TF_contributions/{target_gene}_reg_cont_distributions.csv')
+    #contributions_df.to_csv(f'./data/TF_contributions/{target_gene}_reg_cont_distributions.csv')
