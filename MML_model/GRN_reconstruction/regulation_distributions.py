@@ -5,7 +5,6 @@ import sys
 import torch
 from torch.utils.data import DataLoader
 from torch import tensor
-import matplotlib.pyplot as plt
 
 import numpy as np
 import pandas as pd
@@ -65,7 +64,7 @@ for target_gene in gene_expressions.columns:
         TF_expression_subset = TF_expressions
 
     #create dataframe to store contributions
-    contributions_df = pd.DataFrame(index=gene_expressions.index, columns = gene_expressions.columns)
+    contributions_df = pd.DataFrame(columns = gene_expressions.columns)
 
     
 
@@ -97,4 +96,6 @@ for target_gene in gene_expressions.columns:
         for batch, (X, y) in enumerate(eval_dataloader):
             #contributions = (np.asarray(X.cpu() * np.asarray(param_df['in_weight']) + np.asarray(param_df['in_bias'])))
             contributions = (activation_function((X * model.linear_in.weight) + model.linear_in.bias, leak = 0.01) * model.linear_out.weight) + model.linear_out.bias.data
-            print(contributions)
+            contributions_df[batch] = contributions
+    
+    contributions_df.to_csv(f'./data/TF_contributions/{target_gene}_reg_cont_distributions.csv')
