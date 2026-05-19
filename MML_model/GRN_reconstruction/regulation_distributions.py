@@ -33,11 +33,15 @@ print('Loading Datasets')
 net = pd.read_csv(f"{DATA_ROOT}/Full data files/network(full).tsv", sep='\t')
 #Load target gene expressions
 
+#define the sex of the samples getting reg contributions for
+#sex = 'male'
+sex = 'female'
+
 #try new filtering function
-gene_expressions = pd.read_csv((f"{DATA_ROOT}/Full data files/ARCHS4_healthy_log.tsv"), sep='\t', header=0, index_col = 0)
-male_meta =  pd.read_csv(f"{DATA_ROOT}/Full data files/ARCHS4_male_healthy_meta.csv", index_col = 0)
-print(male_meta.head())
-gene_expressions = gene_expressions.loc[male_meta.index]
+gene_expressions = pd.read_csv((f"{DATA_ROOT}/Full data files/ARCHS4_{sex}_external_expressions.tsv"), sep='\t', header=0, index_col = 0)
+#male_meta =  pd.read_csv(f"{DATA_ROOT}/Full data files/ARCHS4_male_healthy_meta.csv", index_col = 0)
+#print(male_meta.head())
+#gene_expressions = gene_expressions.loc[male_meta.index]
 
 
 
@@ -49,7 +53,7 @@ inf_networks_list = []
 #batch size = 1 as want to run 1 sample at a time
 batch_size = 1
 
-activation_function = activation_function_map['MML']
+activation_function = activation_function_map['MML']['activation']
 
 print(gene_expressions.head())
 for target_gene in gene_expressions.columns:
@@ -64,7 +68,7 @@ for target_gene in gene_expressions.columns:
         TF_expression_subset = TF_expressions
 
     #create dataframe to store contributions
-    contributions_df = pd.DataFrame(columns = gene_expressions.columns)
+    contributions_df = pd.DataFrame(columns = TF_expression_subset.columns)
 
     dataset = CustomTFGE(device, TF_expressions=TF_expression_subset, gene_expressions=gene_expressions, network = net, target_gene = target_gene)
 
@@ -72,30 +76,12 @@ for target_gene in gene_expressions.columns:
     eval_dataloader = DataLoader(dataset, batch_size=1, shuffle=False)
     model.eval()
 
-    '''
-    TF_in_model = list(TF_expression_subset.columns)
-
-    #intialise a df to store model parameters
-    param_df = pd.DataFrame(index = TF_expression_subset.columns, columns = ['in_weight', 'in_bias', 'out_weight', 'out_bias'])
-    param_df['TF'] = param_df.index
-    param_df = param_df.reset_index()
-
-    #add model parameters to df
-    param_df['in_weight'] = np.asarray(model.module.linear_in.weight.data.cpu())
-    param_df['in_bias'] = np.asarray(model.module.linear_in.bias.data.cpu())
-    param_df['out_weight'] = np.asarray(model.module.linear_out.weight.data.cpu().flatten())
-    #for linear-out layer there is only 1 bias so repeat for length of dataframe
-    param_df['out_bias'] = (list(np.asarray(model.module.linear_out.bias.data.cpu())) * len(TF_in_model))
-    '''
-
     with torch.no_grad():
         #this gets the indexes of all TFs post-activation that have a value < 0.5 and adds one to the corresponding index in threshold tracker 
         for batch, (X, y) in enumerate(eval_dataloader):
-            print(X.shape)
-            print(model.module.linear_in.weight.shape)
             #contributions = (np.asarray(X.cpu() * np.asarray(param_df['in_weight']) + np.asarray(param_df['in_bias'])))
-            contributions = (activation_function((X * model.module.linear_in.weight) + model.module.linear_in.bias, leak = 0.01) * model.module.linear_out.weight) + model.module.linear_out.bias.data
-            contributions_df[batch] = contributions
-    print(contributions_df.head())
-    
-    #contributions_df.to_csv(f'./data/TF_contributions/{target_gene}_reg_cont_distributions.csv')
+            #contributions = np.asarray(((activation_function((X * model.module.linear_in.weight) + model.module.linear_in.bias, leak = 0.01) * model.module.linear_out.weight) + model.module.linear_out.bias.data).cpu().flatten())
+            contributions = np.asarray((activation_function((X * model.module.linear_in.weight) + model.module.linear_in.bias, leak = 0.01) * model.module.linear_out.weight).cpu().flatten())
+            contributions_df.loc[batch] = contributions
+    #print(contributions_df.head())
+    contributions_df.to_csv(f'./data/{sex}_contribution_dists/{target_gene}_reg_cont_distributions.csv')
