@@ -8,10 +8,10 @@ import seaborn as sns
 GRN_ROOT = './data'
 
 #set sex you want to get and plot GRN statistics for
-sex = 'FEMALE'
-#sex = 'MALE'
+#sex = 'FEMALE'
+sex = 'MALE'
 
-GRN = pd.read_csv(f'{GRN_ROOT}/100per_act_inferred_GRN_{sex}.csv', index_col = 0)
+GRN = pd.read_csv(f'{GRN_ROOT}/100per_act_inferred_GRN_{sex}_EXTERNAL.csv', index_col = 0)
 
 #add a regulatory nature column
 GRN['Reg_name'] = np.where(GRN['Reg'] < 0, 'Inhibitory', 'Excitatory')
@@ -85,7 +85,7 @@ sns.move_legend(ax, "upper left", bbox_to_anchor=(1, 1))
 ax.set_ylabel('Out Degree', fontsize = 15)
 ax.set_xlabel('In Degree', fontsize = 15)
 ax.set_title('TF-TG Connectedness', fontsize = 20)
-plt.savefig(f'./figures/InOutConnectednessTFTG_{sex}', dpi = 300)
+plt.savefig(f'./figures/InOutConnectednessTFTG_{sex}', dpi = 300, bbox_inches = 'tight')
 
 #plot in and out degree coloured by betweenes
 fig, ax = plt.subplots(1)
@@ -94,4 +94,4 @@ sns.move_legend(ax, "upper left", bbox_to_anchor=(1, 1))
 ax.set_ylabel('Out Degree', fontsize = 15)
 ax.set_xlabel('In Degree', fontsize = 15)
 ax.set_title('TF-TG Betweeness', fontsize = 20)
-plt.savefig(f'./figures/InOutBetweenessTFTG_{sex}', dpi = 300)
+plt.savefig(f'./figures/InOutBetweenessTFTG_{sex}', dpi = 300, bbox_inches = 'tight')

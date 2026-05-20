@@ -43,11 +43,20 @@ female_sample_IDs = pd.read_csv(f'{DATA_ROOT}/Full data files/ARCHS4_female_exte
 male_sample_IDs = pd.read_csv(f'{DATA_ROOT}/Full data files/ARCHS4_male_external_meta.csv', index_col=0).index
 
 #split the datasets into male and female before indexes are reset
-female_expressions = gene_expressions.loc[female_sample_IDs]
-male_expressions = gene_expressions.loc[male_sample_IDs]
+#female_expressions = gene_expressions.loc[female_sample_IDs]
+#male_expressions = gene_expressions.loc[male_sample_IDs]
+
+female_expressions = pd.read_csv(f'{DATA_ROOT}/Full data files/ARCHS4_female_external_expressions.tsv', index_col = 0, header = 0)
+male_expressions = pd.read_csv(f'{DATA_ROOT}/Full data files/ARCHS4_male_external_expressions.tsv', index_col = 0, header = 0)
+
+print(female_expressions.head())
+print(male_expressions.head())
 
 female_TF_expressions, female_gene_expressions = filter_datasets(net, GE_df=female_expressions)
 male_TF_expressions, male_gene_expressions = filter_datasets(net, GE_df=male_expressions)
+
+print(female_expressions.head())
+print(male_expressions.head())
 
 assert list(female_TF_expressions.columns) == list(male_TF_expressions.columns)
 assert list(female_gene_expressions.columns) == list(male_gene_expressions.columns)
