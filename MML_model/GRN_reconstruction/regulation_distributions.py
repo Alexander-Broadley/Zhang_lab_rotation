@@ -36,13 +36,10 @@ net = pd.read_csv(f"{DATA_ROOT}/Full data files/network(full).tsv", sep='\t')
 
 #define the sex of the samples getting reg contributions for
 sex = 'male'
-#sex = 'female'
+# sex = 'female'
 
 #try new filtering function
 gene_expressions = pd.read_csv((f"{DATA_ROOT}/Full data files/ARCHS4_{sex}_external_expressions.tsv"), sep='\t', header=0, index_col = 0)
-#male_meta =  pd.read_csv(f"{DATA_ROOT}/Full data files/ARCHS4_male_healthy_meta.csv", index_col = 0)
-#print(male_meta.head())
-#gene_expressions = gene_expressions.loc[male_meta.index]
 
 
 TF_expressions, gene_expressions = filter_datasets(net, GE_df=gene_expressions)
@@ -54,9 +51,6 @@ inf_networks_list = []
 batch_size = 1
 
 activation_function = activation_function_map['MML']['activation']
-
-#gene_expressions.reset_index(inplace=True)
-print(gene_expressions.head())
 
 for target_gene in gene_expressions.columns:
     print(f'Processing {target_gene} model')
@@ -77,15 +71,13 @@ for target_gene in gene_expressions.columns:
     eval_dataloader = DataLoader(dataset, batch_size=1, shuffle=False)
     model.eval()
 
+    
     with torch.no_grad():
         #this gets the indexes of all TFs post-activation that have a value < 0.5 and adds one to the corresponding index in threshold tracker 
         for batch, (X, y) in enumerate(eval_dataloader):
             #normalise contributions by expression of target gene in the sample
-            normalising_constant = float(y.cpu())
-            if normalising_constant == 0:
-                print(normalising_constant)
-
+            normalising_constant = float(model(X).cpu())
             contributions = np.asarray((activation_function((X * model.module.linear_in.weight) + model.module.linear_in.bias, leak = 0.01) * model.module.linear_out.weight).cpu().flatten())
-            contributions_df.loc[batch] = contributions/normalising_constant
-    #print(contributions_df.head())
+            contributions_df.loc[int(batch)] = contributions/normalising_constant
+
     contributions_df.to_csv(f'./data/{sex}_contribution_dists/{target_gene}_reg_cont_distributions.csv')
