@@ -24,27 +24,30 @@ actual_male_expressions = pd.read_csv('/home/alexanderb/Zhang_lab/data/Full data
 df_list = []
 
 #specify abs difference in relative contribution required to consider a TF a differential regulator of a TG
-threshold = 0.001
+for threshold in [0.01, 0.05, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1, 2, 3]:
+    print(f'Processing across target genes for a threshold: {threshold}')
 
-for target in gene_expressions.columns:
-    print(f'Processing {target} scores')
+    for target in gene_expressions.columns:
+        print(f'Processing {target} scores')
 
-    results_df = pd.DataFrame(columns = ['TF','TG','abs_diff', 'Male_mean_exp', 'Female_mean_exp'])
+        results_df = pd.DataFrame(columns = ['TF','TG','abs_diff', 'Male_mean_exp', 'Female_mean_exp', 'Exp_difference'])
 
-    #for now manually load dist for one target gene
-    normalised_cont_differences = pd.read_csv(f'./data/differential_relative_effect_sizes/{target}_DRE.csv', index_col = 0)
-    normalised_cont_differences = normalised_cont_differences[normalised_cont_differences["abs_mean_cont_diff"] > threshold]
+        #for now manually load dist for one target gene
+        normalised_cont_differences = pd.read_csv(f'./data/differential_relative_effect_sizes/{target}_DRE.csv', index_col = 0)
+        
+        normalised_cont_differences = normalised_cont_differences[normalised_cont_differences["abs_mean_cont_diff"] > threshold]
+        print(normalised_cont_differences)
 
-    TFs_to_add = list(normalised_cont_differences.index)
-    results_df['TF'] = TFs_to_add
-    results_df['TG'] = target
-    results_df['Male_mean_exp'] = np.mean(actual_male_expressions[target])
-    results_df['Female_mean_exp'] = np.mean(actual_female_expressions[target])
+        results_df['TF'] = list(normalised_cont_differences.index)
+        results_df['TG'] = target
+        results_df['abs_diff'] = np.asarray(normalised_cont_differences['abs_mean_cont_diff'])
+        results_df['Male_mean_exp'] = np.mean(actual_male_expressions[target])
+        results_df['Female_mean_exp'] = np.mean(actual_female_expressions[target])
+        results_df['Exp_difference'] = abs(results_df['Male_mean_exp'] -results_df['Female_mean_exp'])
 
-    print(results_df)
+        print(results_df)
 
-    df_list.append(results_df)
+        df_list.append(results_df)
 
-final_results = pd.concat(df_list, axis = 0)
-
-    
+    final_results = pd.concat(df_list, axis = 0, ignore_index=True)
+    final_results.to_csv(f'./data/GW_diff_regulatorts_{threshold}.csv')

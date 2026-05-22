@@ -4,10 +4,11 @@ import os
 import sys
 import torch
 from torch.utils.data import DataLoader
-from torch import tensor
+#from torch import tensor
 
 import numpy as np
 import pandas as pd
+import math
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 
@@ -36,7 +37,7 @@ net = pd.read_csv(f"{DATA_ROOT}/Full data files/network(full).tsv", sep='\t')
 
 #define the sex of the samples getting reg contributions for
 sex = 'male'
-# sex = 'female'
+#sex = 'female'
 
 #try new filtering function
 gene_expressions = pd.read_csv((f"{DATA_ROOT}/Full data files/ARCHS4_{sex}_external_expressions.tsv"), sep='\t', header=0, index_col = 0)
@@ -78,6 +79,10 @@ for target_gene in gene_expressions.columns:
             #normalise contributions by expression of target gene in the sample
             normalising_constant = float(model(X).cpu())
             contributions = np.asarray((activation_function((X * model.module.linear_in.weight) + model.module.linear_in.bias, leak = 0.01) * model.module.linear_out.weight).cpu().flatten())
-            contributions_df.loc[int(batch)] = contributions/normalising_constant
+            if normalising_constant == 0:
+                print('Division creates inf value')
+                contributions_df.loc[int(batch)] = [0] * len(contributions)
+            else:
+                contributions_df.loc[int(batch)] = contributions/normalising_constant
 
     contributions_df.to_csv(f'./data/{sex}_contribution_dists/{target_gene}_reg_cont_distributions.csv')
