@@ -24,28 +24,34 @@ actual_male_expressions = pd.read_csv('/home/alexanderb/Zhang_lab/data/Full data
 df_list = []
 
 #specify abs difference in relative contribution required to consider a TF a differential regulator of a TG
-for threshold in [0.01, 0.05, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1, 2, 3]:
+for threshold in [0.000000001, 0.01, 0.05, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1, 2, 3]:
     print(f'Processing across target genes for a threshold: {threshold}')
 
     for target in gene_expressions.columns:
-        print(f'Processing {target} scores')
+        #print(f'Processing {target} scores')
 
-        results_df = pd.DataFrame(columns = ['TF','TG','abs_diff', 'Male_mean_exp', 'Female_mean_exp', 'Exp_difference'])
+        results_df = pd.DataFrame(columns = ['TF','TG','abs_diff', 'Male_target_mean_exp', 'Female_target_mean_exp', 'target_exp_difference', 'Male_TF_mean_exp', 'Female_TF_mean_exp', 'TF_exp_difference'])
 
         #for now manually load dist for one target gene
         normalised_cont_differences = pd.read_csv(f'./data/differential_relative_effect_sizes/{target}_DRE.csv', index_col = 0)
         
         normalised_cont_differences = normalised_cont_differences[normalised_cont_differences["abs_mean_cont_diff"] > threshold]
-        print(normalised_cont_differences)
 
         results_df['TF'] = list(normalised_cont_differences.index)
+        results_df.index = results_df['TF']
         results_df['TG'] = target
         results_df['abs_diff'] = np.asarray(normalised_cont_differences['abs_mean_cont_diff'])
-        results_df['Male_mean_exp'] = np.mean(actual_male_expressions[target])
-        results_df['Female_mean_exp'] = np.mean(actual_female_expressions[target])
-        results_df['Exp_difference'] = abs(results_df['Male_mean_exp'] -results_df['Female_mean_exp'])
+        results_df['Male_target_mean_exp'] = np.mean(actual_male_expressions[target])
+        results_df['Female_target_mean_exp'] = np.mean(actual_female_expressions[target])
+        results_df['target_exp_difference'] = abs(results_df['Male_target_mean_exp'] - results_df['Female_target_mean_exp'])
 
-        print(results_df)
+        for TF in results_df.index:
+            results_df.loc[TF, 'Male_TF_mean_exp']  = np.mean(actual_male_expressions[TF])
+            results_df.loc[TF, 'Female_TF_mean_exp'] = np.mean(actual_female_expressions[TF])
+            results_df.loc[TF, 'TF_exp_difference']  = abs(results_df.loc[TF, 'Male_TF_mean_exp'] - results_df.loc[TF, 'Female_TF_mean_exp'])
+
+        if target == 'ADNP':
+            print(results_df)
 
         df_list.append(results_df)
 

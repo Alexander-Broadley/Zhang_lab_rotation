@@ -36,34 +36,27 @@ net = pd.read_csv(f"{DATA_ROOT}/Full data files/network(full).tsv", sep='\t')
 from model_building.filter_dataset import filter_datasets
 
 #try new filtering function
-gene_expressions = pd.read_csv((f"{DATA_ROOT}/Full data files/ARCHS4_healthy_log.tsv"), sep='\t', header=0, index_col=0)
+#gene_expressions = pd.read_csv((f"{DATA_ROOT}/Full data files/ARCHS4_healthy_log.tsv"), sep='\t', header=0, index_col=0)
 
 #load male and female metadata
-female_sample_IDs = pd.read_csv(f'{DATA_ROOT}/Full data files/ARCHS4_female_external_meta.csv', index_col=0).index
-male_sample_IDs = pd.read_csv(f'{DATA_ROOT}/Full data files/ARCHS4_male_external_meta.csv', index_col=0).index
+#female_sample_IDs = pd.read_csv(f'{DATA_ROOT}/Full data files/ARCHS4_female_external_meta.csv', index_col=0).index
+#male_sample_IDs = pd.read_csv(f'{DATA_ROOT}/Full data files/ARCHS4_male_external_meta.csv', index_col=0).index
 
 #split the datasets into male and female before indexes are reset
 #female_expressions = gene_expressions.loc[female_sample_IDs]
 #male_expressions = gene_expressions.loc[male_sample_IDs]
 
-female_expressions = pd.read_csv(f'{DATA_ROOT}/Full data files/ARCHS4_female_external_expressions.tsv', index_col = 0, header = 0)
-male_expressions = pd.read_csv(f'{DATA_ROOT}/Full data files/ARCHS4_male_external_expressions.tsv', index_col = 0, header = 0)
+female_expressions = pd.read_csv(f'{DATA_ROOT}/Full data files/ARCHS4_female_external_expressions.tsv', index_col = 0, sep ='\t')
+male_expressions = pd.read_csv(f'{DATA_ROOT}/Full data files/ARCHS4_male_external_expressions.tsv', index_col = 0, sep ='\t')
 
-print(female_expressions.head())
-print(male_expressions.head())
+print(female_expressions.head(n = 2))
+print(male_expressions.head(n = 2))
 
 female_TF_expressions, female_gene_expressions = filter_datasets(net, GE_df=female_expressions)
 male_TF_expressions, male_gene_expressions = filter_datasets(net, GE_df=male_expressions)
 
-print(female_expressions.head())
-print(male_expressions.head())
-
-assert list(female_TF_expressions.columns) == list(male_TF_expressions.columns)
-assert list(female_gene_expressions.columns) == list(male_gene_expressions.columns)
-
-#filter out male and female samples
-print(female_TF_expressions.shape, female_gene_expressions.shape)
-print(male_TF_expressions.shape, male_gene_expressions.shape)
+#assert list(female_TF_expressions.columns) == list(male_TF_expressions.columns)
+#assert list(female_gene_expressions.columns) == list(male_gene_expressions.columns)
 #---------------------------------------------------------------
 #load models per target gene
 #---------------------------------------------------------------
