@@ -3,7 +3,7 @@ import os
 import pandas as pd
 import numpy as np
 
-DATA_ROOT = '/Users/alexanderbroadley/Documents/PhD/Zhang Lab/Zhang_Lab_Code/data'
+DATA_ROOT = '../../data'
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 
@@ -25,7 +25,17 @@ background_TFs = set(TF_expressions.columns)
 background_genes = background_TFs | background_TGs
 
 
-with open('./background.txt', 'w+') as f:
+with open('./data/background.txt', 'w+') as f:
     for gene in background_genes:
+        f.write(f'{gene}\n')
+f.close
+
+with open('./data/background_TFs.txt', 'w+') as f:
+    for gene in background_TFs:
+        f.write(f'{gene}\n')
+f.close
+
+with open('./data/background_TGs.txt', 'w+') as f:
+    for gene in background_TGs:
         f.write(f'{gene}\n')
 f.close

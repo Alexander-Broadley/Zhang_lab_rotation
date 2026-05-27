@@ -10,7 +10,7 @@ DATA_ROOT = '../../data'
 FIGURE_ROOT = './figures'
 
 #determines which set of models to use
-suffix = '_EXPERIMENTAL'
+suffix = '_MF_external'
 
 #======================================================================
 #load expressions datasets
@@ -24,16 +24,22 @@ train_actual_TPM = pd.read_csv(f"{DATA_ROOT}/Train_dataset_actual_expressions{su
 test_predicted_TPM = pd.read_csv(f"{DATA_ROOT}/Test_dataset_predicted_expressions{suffix}.csv", index_col=0, header=0)
 test_actual_TPM = pd.read_csv(f"{DATA_ROOT}/Test_dataset_actual_expressions{suffix}.csv", index_col=0, header=0)
 
+female_actual = pd.read_csv(f"{DATA_ROOT}/female_actual_gene_expressions.csv", index_col = 0)
+female_predicted = pd.read_csv(f"{DATA_ROOT}/female_predicted_gene_expressions.csv", index_col = 0)
+
+male_actual = pd.read_csv(f"{DATA_ROOT}/male_actual_gene_expressions.csv", index_col = 0)
+male_predicted = pd.read_csv(f"{DATA_ROOT}/male_predicted_gene_expressions.csv", index_col = 0)
+'''
 external_actual_TPM = pd.read_csv(f"{DATA_ROOT}/Full data files/Liver_bulk_external.tsv", sep = '\t', index_col=0, header=0)
 external_predicted_TPM = pd.read_csv(f"{DATA_ROOT}/external_predicted_expressions{suffix}.csv", index_col=0, header=0)
-
+'''
 #remove columns for genes that no models exist for
 train_predicted_TPM = train_predicted_TPM.dropna(axis=1, how='all')
 train_actual_TPM = train_actual_TPM.dropna(axis=1, how='all')
 test_predicted_TPM = test_predicted_TPM.dropna(axis=1, how='all')
 test_actual_TPM = test_actual_TPM.dropna(axis=1, how='all')
-external_predicted_TPM = external_actual_TPM.dropna(axis=1, how='all')
-external_actual_TPM = external_actual_TPM.dropna(axis=1, how='all')
+#external_predicted_TPM = external_actual_TPM.dropna(axis=1, how='all')
+#external_actual_TPM = external_actual_TPM.dropna(axis=1, how='all')
 
 
 #remove columns for genes that no models exist for
@@ -41,16 +47,18 @@ external_actual_TPM = external_actual_TPM.dropna(axis=1, how='all')
 
 #temporary before fixing code for external model creation - drop all NA columns
 #external_predicted_TPM = external_predicted_TPM.dropna(axis=1, how='all')
-external_actual_TPM = external_actual_TPM[external_predicted_TPM.columns]
+#external_actual_TPM = external_actual_TPM[external_predicted_TPM.columns]
 
 #ensure column indexes (genes) are in the same order across datasets
 train_actual_TPM = test_actual_TPM[train_predicted_TPM.columns]
 test_actual_TPM = test_actual_TPM[test_predicted_TPM.columns]
-external_actual_TPM = external_actual_TPM[external_predicted_TPM.columns]
+female_actual = female_actual[female_predicted.columns]
+male_actual = male_actual[male_predicted.columns]
+#external_actual_TPM = external_actual_TPM[external_predicted_TPM.columns]
 print('Loaded Datasets')
 
-print(external_actual_TPM.head())
-print(external_predicted_TPM.head())
+#print(external_actual_TPM.head())
+#print(external_predicted_TPM.head())
 
 #======================================================================
 #calculate sample wise correlation values
@@ -127,7 +135,7 @@ def get_correlations_df(df1, df2, dataset_label, rowise = True):
     for i in range(0, df1.shape[0]):
         results_df.loc[i, "pearsons"] = scipy.stats.pearsonr(df1.iloc[i, :], df2.iloc[i, :]).statistic
         results_df.loc[i, 'spearmans'] = scipy.stats.spearmanr(df1.iloc[i, :], df2.iloc[i, :]).statistic
-        results_df.loc[i, 'MSE'] = mean_squared_error(df1.iloc[i, :], df2.iloc[i, :])
+        #results_df.loc[i, 'MSE'] = mean_squared_error(df1.iloc[i, :], df2.iloc[i, :])
         results_df.loc[i, "dataset"] = dataset_label
     
     #results_df['pearsons'] = get_correlations(df1, df2, rowise = rowise)
@@ -140,13 +148,14 @@ print('Calculating Samplewise Correlations')
 samplewise_df_list = []
 samplewise_df_list.append(get_correlations_df(train_actual_TPM, train_predicted_TPM, dataset_label='Train', rowise = True))
 samplewise_df_list.append(get_correlations_df(test_actual_TPM, test_predicted_TPM, dataset_label='Test', rowise = True))
-samplewise_df_list.append(get_correlations_df(external_actual_TPM, external_predicted_TPM, dataset_label='External', rowise = True))
+samplewise_df_list.append(get_correlations_df(female_actual, female_predicted, dataset_label='Female', rowise = True))
+samplewise_df_list.append(get_correlations_df(male_actual, male_predicted, dataset_label='Male', rowise = True))
 
 samplewise_correlations = pd.concat(samplewise_df_list, ignore_index = True)
 #create_pearsons_violin(results_df=samplewise_correlations, title = 'Samplewise Pearsons Correlations for TPM models', file_title='samplewise_pearsons_TPM')
 create_pearsons_violin(results_df=samplewise_correlations, y_col='pearsons', title = f'Samplewise Pearsons Correlations', file_title= f'samplewise_pearsons{suffix}', figure_root=f'./figures/{suffix}')
 create_pearsons_violin(results_df=samplewise_correlations, y_col='spearmans', title = f'Samplewise Spearmans Correlations', file_title=f'samplewise_spearmans{suffix}', figure_root=f'./figures/{suffix}')
-create_pearsons_violin(results_df=samplewise_correlations, y_col='MSE', title = f'Samplewise MSE', file_title=f'samplewise_MSE{suffix}', figure_root=f'./figures/{suffix}')
+#create_pearsons_violin(results_df=samplewise_correlations, y_col='MSE', title = f'Samplewise MSE', file_title=f'samplewise_MSE{suffix}', figure_root=f'./figures/{suffix}')
 
 print('Finished Samplewise Calculations')
 
@@ -154,13 +163,15 @@ print('Calculating Genewise Correlations')
 genewise_df_list = []
 genewise_df_list.append(get_correlations_df(train_actual_TPM, train_predicted_TPM, dataset_label='Train', rowise = False))
 genewise_df_list.append(get_correlations_df(test_actual_TPM, test_predicted_TPM, dataset_label='Test', rowise = False))
-genewise_df_list.append(get_correlations_df(external_actual_TPM, external_predicted_TPM, dataset_label='External', rowise = False))
+genewise_df_list.append(get_correlations_df(female_actual, female_predicted, dataset_label='Female', rowise = False))
+genewise_df_list.append(get_correlations_df(male_actual, male_predicted, dataset_label='Male', rowise = False))
 
 genewise_correlations = pd.concat(genewise_df_list, ignore_index=True)
 
 create_pearsons_violin(results_df=genewise_correlations, y_col='pearsons', title = f'Genewise Pearsons Correlations', file_title = f'genewise_pearsons{suffix}', figure_root=f'./figures/{suffix}')
 create_pearsons_violin(results_df=genewise_correlations, y_col='spearmans', title = f'Genewise Spearmans Correlations', file_title = f'genewise_spearmans{suffix}', figure_root=f'./figures/{suffix}')
-create_pearsons_violin(results_df=genewise_correlations, y_col='MSE', title = f'Genewise MSE', file_title = f'genewise_MSE{suffix}', figure_root=f'./figures/{suffix}')
+#create_pearsons_violin(results_df=genewise_correlations, y_col='MSE', title = f'Genewise MSE', file_title = f'genewise_MSE{suffix}', figure_root=f'./figures/{suffix}')
+
 print('Finished Genewise Calculations')
 
 
