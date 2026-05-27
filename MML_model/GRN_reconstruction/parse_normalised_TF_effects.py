@@ -35,12 +35,14 @@ for threshold in [0.000000001, 0.01, 0.05, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.
         #for now manually load dist for one target gene
         normalised_cont_differences = pd.read_csv(f'./data/differential_relative_effect_sizes/{target}_DRE.csv', index_col = 0)
         
-        normalised_cont_differences = normalised_cont_differences[normalised_cont_differences["abs_mean_cont_diff"] > threshold]
 
-        results_df['TF'] = list(normalised_cont_differences.index)
+        filtered_differences = normalised_cont_differences[normalised_cont_differences["abs_mean_cont_diff"] > threshold]
+        print(normalised_cont_differences.shape)
+        print(filtered_differences.shape)
+        results_df['TF'] = list(filtered_differences.index)
         results_df.index = results_df['TF']
         results_df['TG'] = target
-        results_df['abs_diff'] = np.asarray(normalised_cont_differences['abs_mean_cont_diff'])
+        results_df['abs_diff'] = np.asarray(filtered_differences['abs_mean_cont_diff'])
         results_df['Male_target_mean_exp'] = np.mean(actual_male_expressions[target])
         results_df['Female_target_mean_exp'] = np.mean(actual_female_expressions[target])
         results_df['target_exp_difference'] = abs(results_df['Male_target_mean_exp'] - results_df['Female_target_mean_exp'])
