@@ -59,7 +59,7 @@ for target in gene_expressions.columns:
               'n_estimators': [100, 150, 200, 250, 500, 750, 1000] 
               }
 '''
-    rf = RandomForestRegressor(max_depth = 3, random_state = 42).fit(X_train, y_train)
+    rf = RandomForestRegressor(max_depth = 3, random_state = 42, njobs = 5).fit(X_train, y_train)
     '''
     rand_search = RandomizedSearchCV(rf, 
                                  param_distributions = param_dist, 
@@ -70,7 +70,7 @@ for target in gene_expressions.columns:
 
     rf = rand_search.best_estimator_
     '''
-    regressor = LinearRegression().fit(X_train, y_train)
+    regressor = LinearRegression(random_state = 42, njobs = 5).fit(X_train, y_train)
 
     #put PPC on train and test in a dataframe
     RF_results_df.loc[target, 'train_PCC'] = pearsonr(rf.predict(X_train), y_train).statistic
@@ -94,4 +94,3 @@ for target in gene_expressions.columns:
 
 RF_results_df.to_csv('./data/RF_regressor_results.csv')
 MLR_results_df.to_csv('./data/MLR_regressor_results.csv')
-
