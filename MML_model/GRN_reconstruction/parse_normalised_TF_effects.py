@@ -13,7 +13,7 @@ from model_building.filter_dataset import filter_datasets
 DATA_ROOT = '../../data'
 
 net = pd.read_csv(f"{DATA_ROOT}/Full data files/network(full).tsv", sep='\t')
-gene_expressions = pd.read_csv((f"{DATA_ROOT}/Full data files/ARCHS4_healthy_log_noFMExternal.tsv"), sep='\t', header=0)
+gene_expressions = pd.read_csv((f"/home/alexanderb/Zhang_lab/data/Full data files/ARCHS4_healthy_log_noFMExternal.tsv"), sep='\t', header=0)
 TF_expressions, gene_expressions = filter_datasets(net, GE_df=gene_expressions)
 
 #load actual expressions
@@ -24,7 +24,8 @@ actual_male_expressions = pd.read_csv('/home/alexanderb/Zhang_lab/data/Full data
 df_list = []
 
 #specify abs difference in relative contribution required to consider a TF a differential regulator of a TG
-for threshold in [0.000000001, 0.01, 0.05, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1, 2, 3]:
+#for threshold in [0.000000001, 0.01, 0.05, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1, 2, 3]:
+for threshold in [5, 10, 20, 50, 100, 200]:
     print(f'Processing across target genes for a threshold: {threshold}')
 
     for target in gene_expressions.columns:
