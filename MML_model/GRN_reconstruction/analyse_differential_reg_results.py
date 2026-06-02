@@ -58,6 +58,10 @@ f.close
 
 #get target gene specific info at given threshold
 
-for target in ['MBOAT7', 'CYP7B1', 'JUND']:
+for target in ['MBOAT7', 'CYP7B1', 'JUND', "CYP1A1",  "CYP1A2", "CYP1B1"]:
     target_res = results[results['TF'] == target]
-    target_res.to_csv(f'./data/{target}_diff_reg_{threshold}.csv')
+    target_res.to_csv(f'./data/{target}_diff_reg_{threshold}_TF.csv')
+
+for target in ['MBOAT7', 'CYP7B1', 'JUND', "CYP1A1",  "CYP1A2", "CYP1B1"]:
+    target_res = results[results['TG'] == target]
+    target_res.to_csv(f'./data/{target}_diff_reg_{threshold}_TG.csv')
