@@ -22,7 +22,7 @@ for target in gene_expressions.columns:
     male_target_contribs = pd.read_csv(f'./data/male_contribution_dists/{target}_reg_cont_distributions.csv', index_col = 0)
     female_target_contribs = pd.read_csv(f'./data/female_contribution_dists/{target}_reg_cont_distributions.csv', index_col = 0)
     #iterate through TFs in male_target_contribs (same as in female)
-    results_df = pd.DataFrame(index = male_target_contribs.columns, columns = ['abs_mean_cont_diff'])
+    results_df = pd.DataFrame(columns = ['abs_mean_cont_diff'])
     for TF in male_target_contribs.columns:
         #take the difference between the two columns
         sex_differential = abs(np.mean(male_target_contribs[TF]) - np.mean(female_target_contribs[TF]))

@@ -60,7 +60,7 @@ def TF_subset(net, target_gene):
     return(list(net['TF'][net['Gene'] == target_gene]))
 
 #define training parameters
-learning_rate = 1e-3
+learning_rate = 0.01
 #run 1 sample at a time, but run through each sample per training epoch
 batch_size = TF_expressions.shape[0]
 #max 100 epochs
@@ -145,16 +145,16 @@ for target_gene in gene_expressions.columns:
     results_df.loc[target_gene, 'train_loss'] = train_loss
     results_df.loc[target_gene, 'test_loss'] = test_loss
     results_df.loc[target_gene, 'in_features'] = len(TF_expression_subset.columns)
-    torch.save(model, f'../models/MF_external_models/{target_gene}_model.pth')
+    torch.save(model, f'../models/higher_LR/{target_gene}_model.pth')
 
 
-train_actual.to_csv(f'{DATA_ROOT}/Train_dataset_actual_expressions_MF_external.csv')
-train_predicted.to_csv(f'{DATA_ROOT}/Train_dataset_predicted_expressions_MF_external.csv')
+train_actual.to_csv(f'{DATA_ROOT}/Train_dataset_actual_expressions_highLR.csv')
+train_predicted.to_csv(f'{DATA_ROOT}/Train_dataset_predicted_expressions_highLR.csv')
 
-test_actual.to_csv(f'{DATA_ROOT}/Test_dataset_actual_expressions_MF_external.csv')
-test_predicted.to_csv(f'{DATA_ROOT}/Test_dataset_predicted_expressions_MF_external.csv')
+test_actual.to_csv(f'{DATA_ROOT}/Test_dataset_actual_expressions_highLR.csv')
+test_predicted.to_csv(f'{DATA_ROOT}/Test_dataset_predicted_expressions_highLR.csv')
 
 
-results_df.to_csv('../../data/MF_external_results.csv')
+results_df.to_csv('../../data/highLR_external_results.csv')
 
-print('Finished MF external models')
+print('Finished high LR external models')

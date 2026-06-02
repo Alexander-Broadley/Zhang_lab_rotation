@@ -37,13 +37,13 @@ for threshold in [5, 10, 20, 50, 100, 200]:
         normalised_cont_differences = pd.read_csv(f'./data/differential_relative_effect_sizes/{target}_DRE.csv', index_col = 0)
         
 
-        filtered_differences = normalised_cont_differences[normalised_cont_differences["abs_mean_cont_diff"] > threshold]
+        results_df = normalised_cont_differences[normalised_cont_differences["abs_mean_cont_diff"] > threshold]
         print(normalised_cont_differences.shape)
-        print(filtered_differences.shape)
-        results_df['TF'] = list(filtered_differences.index)
+        print(results_df.shape)
+        results_df['TF'] = list(results_df.index)
         results_df.index = results_df['TF']
         results_df['TG'] = target
-        results_df['abs_diff'] = np.asarray(filtered_differences['abs_mean_cont_diff'])
+        results_df['abs_diff'] = np.asarray(results_df['abs_mean_cont_diff'])
         results_df['Male_target_mean_exp'] = np.mean(actual_male_expressions[target])
         results_df['Female_target_mean_exp'] = np.mean(actual_female_expressions[target])
         results_df['target_exp_difference'] = abs(results_df['Male_target_mean_exp'] - results_df['Female_target_mean_exp'])
@@ -52,9 +52,6 @@ for threshold in [5, 10, 20, 50, 100, 200]:
             results_df.loc[TF, 'Male_TF_mean_exp']  = np.mean(actual_male_expressions[TF])
             results_df.loc[TF, 'Female_TF_mean_exp'] = np.mean(actual_female_expressions[TF])
             results_df.loc[TF, 'TF_exp_difference']  = abs(results_df.loc[TF, 'Male_TF_mean_exp'] - results_df.loc[TF, 'Female_TF_mean_exp'])
-
-        if target == 'ADNP':
-            print(results_df)
 
         df_list.append(results_df)
 

@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 
 from scipy import stats
 
-threshold = 1
+threshold = 0.1
 file_path = f'./data/GW_diff_regulatorts_{threshold}.csv'
 results = pd.read_csv(file_path, index_col = 0)
 
@@ -58,6 +58,6 @@ f.close
 
 #get target gene specific info at given threshold
 
-for target in ['MBOAT7', 'CYP7B1', 'TP53']:
-    target_res = results[results['TG'] == target]
+for target in ['MBOAT7', 'CYP7B1', 'JUND']:
+    target_res = results[results['TF'] == target]
     target_res.to_csv(f'./data/{target}_diff_reg_{threshold}.csv')

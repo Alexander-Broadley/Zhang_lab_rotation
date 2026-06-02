@@ -76,7 +76,7 @@ for target_gene in gene_expressions.columns:
     with torch.no_grad():
         #this gets the indexes of all TFs post-activation that have a value < 0.5 and adds one to the corresponding index in threshold tracker 
         for batch, (X, y) in enumerate(eval_dataloader):
-            #normalise contributions by expression of target gene in the sample
+            #normalise contributions by predicted expression of target gene in the sample
             normalising_constant = float(model(X).cpu())
             contributions = np.asarray((activation_function((X * model.module.linear_in.weight) + model.module.linear_in.bias, leak = 0.01) * model.module.linear_out.weight).cpu().flatten())
             if normalising_constant == 0:
@@ -84,5 +84,6 @@ for target_gene in gene_expressions.columns:
                 contributions_df.loc[int(batch)] = [0] * len(contributions)
             else:
                 contributions_df.loc[int(batch)] = contributions/normalising_constant
+        print(contributions_df)
 
     contributions_df.to_csv(f'./data/{sex}_contribution_dists/{target_gene}_reg_cont_distributions.csv')
