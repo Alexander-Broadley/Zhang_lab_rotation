@@ -50,17 +50,17 @@ for target in gene_expressions.columns:
 
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state = 42)
 
-    regressor = LinearRegression().fit(X_train, y_train)
+    rf = RandomForestRegressor(max_depth = 3, random_state = 42).fit(X_train, y_train)
 
-    MLR_results_df.loc[target, 'train_PCC'] = pearsonr(regressor.predict(X_train), y_train).statistic
-    MLR_results_df.loc[target, 'test_pCC'] = pearsonr(regressor.predict(X_test), y_test).statistic
+    #put PPC on train and test in a dataframe
+    RF_results_df.loc[target, 'train_PCC'] = pearsonr(rf.predict(X_train), y_train).statistic
+    RF_results_df.loc[target, 'test_PCC'] = pearsonr(rf.predict(X_test), y_test).statistic
 
-    MLR_results_df.loc[target, 'male_PCC'] = pearsonr(regressor.predict(male_TF_expression_subset), male_gene_expressions[target]).statistic
-    MLR_results_df.loc[target, 'female_PCC'] = pearsonr(regressor.predict(female_TF_expression_subset), female_gene_expressions[target]).statistic
-
+    RF_results_df.loc[target, 'male_PCC'] = pearsonr(rf.predict(male_TF_expression_subset), male_gene_expressions[target]).statistic
+    RF_results_df.loc[target, 'female_PCC'] = pearsonr(rf.predict(female_TF_expression_subset), female_gene_expressions[target]).statistic
     #save the models
     from pickle import dump
-    with open(f'./models/MLR/{target}.pkl', 'wb') as f:
-        dump(regressor, f, protocol=5)
+    with open(f'./models/RF/{target}.pkl', 'wb') as f:
+        dump(rf, f, protocol=5)
 
-MLR_results_df.to_csv('./data/MLR_regressor_results.csv')
+RF_results_df.to_csv('./data/RF_regressor_results.csv')

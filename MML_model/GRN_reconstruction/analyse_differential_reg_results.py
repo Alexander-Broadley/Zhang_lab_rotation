@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 
 from scipy import stats
 
-threshold = 0.1
+threshold = 0.5
 file_path = f'./data/GW_diff_regulatorts_{threshold}.csv'
 results = pd.read_csv(file_path, index_col = 0)
 
@@ -53,6 +53,11 @@ f.close
 
 with open(f'./data/{threshold}_differential_regulators.txt', 'w+') as f:
     for gene in diff_regulators:
+        f.write(f'{gene}\n')
+f.close
+
+with open(f'./data/{threshold}_differential_all.txt', 'w+') as f:
+    for gene in (diff_regulators | diff_regulated):
         f.write(f'{gene}\n')
 f.close
 

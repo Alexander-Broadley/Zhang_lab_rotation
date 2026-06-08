@@ -6,7 +6,7 @@ torch.manual_seed(1475460913)
 
 #defining simple network with linear projects to MML activation, 
 #prediction is linear combination of activation function output
-class SimpleMMLModel(nn.Module):
+class fullyConnectedModel(nn.Module):
     def __init__(self, activation_function, n_tfs):
         super().__init__()
         #self.flatten = nn.Flatten()

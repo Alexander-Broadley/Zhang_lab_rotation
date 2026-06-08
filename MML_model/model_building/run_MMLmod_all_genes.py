@@ -32,6 +32,8 @@ from model_building.filter_dataset import filter_datasets
 #import dataset object
 from model_building.customTFGE_dataset import CustomTFGE
 
+from model_building.fullyConnectedMMLModel import fullyConnectedModel
+
 device = torch.accelerator.current_accelerator().type if torch.accelerator.is_available() else "cpu"
 print(f"Using {device} device")
 
@@ -52,6 +54,7 @@ gene_expressions = pd.read_csv((f"{DATA_ROOT}/Full data files/ARCHS4_healthy_log
 
 TF_expressions, gene_expressions = filter_datasets(net, GE_df=gene_expressions)
 print(gene_expressions.shape)
+print(TF_expressions.shape)
 
 #define function to subset transcription factors to only those that directly regulate the target gene
 def TF_subset(net, target_gene):
@@ -100,7 +103,7 @@ for target_gene in gene_expressions.columns:
     dataset = CustomTFGE(device, TF_expressions=TF_expression_subset, gene_expressions=gene_expressions, network = net, target_gene = target_gene)
     train_dataset, test_dataset = torch.utils.data.random_split(dataset, [0.8, 0.2], generator=torch.Generator().manual_seed(42))
 
-    model = SimpleMMLModel(activation_function_map['MML'], TF_expression_subset.shape[1])
+    model = fullyConnectedModel(activation_function_map['MML'], TF_expression_subset.shape[1])
 
     if torch.cuda.device_count() > 1:
         model = nn.DataParallel(model)
@@ -145,16 +148,16 @@ for target_gene in gene_expressions.columns:
     results_df.loc[target_gene, 'train_loss'] = train_loss
     results_df.loc[target_gene, 'test_loss'] = test_loss
     results_df.loc[target_gene, 'in_features'] = len(TF_expression_subset.columns)
-    torch.save(model, f'../models/higher_LR/{target_gene}_model.pth')
+    torch.save(model, f'../models/fully_connected_models/{target_gene}_model.pth')
 
 
-train_actual.to_csv(f'{DATA_ROOT}/Train_dataset_actual_expressions_highLR.csv')
-train_predicted.to_csv(f'{DATA_ROOT}/Train_dataset_predicted_expressions_highLR.csv')
+#train_actual.to_csv(f'{DATA_ROOT}/Train_dataset_actual_expressions_highLR.csv')
+#train_predicted.to_csv(f'{DATA_ROOT}/Train_dataset_predicted_expressions_highLR.csv')
 
-test_actual.to_csv(f'{DATA_ROOT}/Test_dataset_actual_expressions_highLR.csv')
-test_predicted.to_csv(f'{DATA_ROOT}/Test_dataset_predicted_expressions_highLR.csv')
+#test_actual.to_csv(f'{DATA_ROOT}/Test_dataset_actual_expressions_highLR.csv')
+#test_predicted.to_csv(f'{DATA_ROOT}/Test_dataset_predicted_expressions_highLR.csv')
 
 
-results_df.to_csv('../../data/highLR_external_results.csv')
+results_df.to_csv('../../data/fully_connected_results.csv')
 
-print('Finished high LR external models')
+print('Finished fully connected models')

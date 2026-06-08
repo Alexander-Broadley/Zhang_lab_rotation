@@ -23,6 +23,15 @@ actual_male_expressions = pd.read_csv('/home/alexanderb/Zhang_lab/data/Full data
 #create list of DFs to join at the end to minimise memory duplications
 df_list = []
 
+#load PCC from external male and female samples (do not need to transform these)
+MF_scores = pd.read_csv(f'{DATA_ROOT}/female_male_PCC.csv', index_col = 0)
+
+#get only TGs with better than 80% correlation in male and females
+high_MF_scores = MF_scores[(MF_scores['female_PCC'] > 0.7) & (MF_scores['male_PCC'] > 0.7)]
+
+gene_expressions = gene_expressions[high_MF_scores.index]
+
+
 #specify abs difference in relative contribution required to consider a TF a differential regulator of a TG
 #for threshold in [0.000000001, 0.01, 0.05, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1, 2, 3]:
 for threshold in [5, 10, 20, 50, 100, 200]:
@@ -56,4 +65,4 @@ for threshold in [5, 10, 20, 50, 100, 200]:
         df_list.append(results_df)
 
     final_results = pd.concat(df_list, axis = 0, ignore_index=True)
-    final_results.to_csv(f'./data/GW_diff_regulatorts_{threshold}.csv')
+    final_results.to_csv(f'./data/GW_diff_regulatorts_{threshold}_highAcc.csv')

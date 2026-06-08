@@ -15,11 +15,26 @@ if SAVE:
 import pandas as pd
 import numpy as np
 
-DATA_ROOT = '../../../data'
+DATA_ROOT = '../../../data/Full data files'
 fem_meta = pd.read_csv(f'{DATA_ROOT}/ARCHS4_female_healthy_meta.csv', index_col=0)
 male_meta = pd.read_csv(f'{DATA_ROOT}/ARCHS4_male_healthy_meta.csv', index_col=0)
 
-Gene_expression_data = pd.read_csv(f'{DATA_ROOT}/Full data files/ARCHS4_healthy_RAW.tsv', sep = '\t', index_col=0)
+#get genes to subset gene expression to - make it a fair comparison with DL approach
+
+net = pd.read_csv(f"{DATA_ROOT}/network(full).tsv", sep='\t')
+genes_to_keep = list(set(net['TF']) | set(net['Gene']))
+
+
+Gene_expression_data = pd.read_csv(f'{DATA_ROOT}/ARCHS4_healthy_RAW.tsv', sep = '\t', index_col=0)
+
+genes_to_keep = [gene for gene in genes_to_keep if gene in Gene_expression_data.columns]
+
+
+Gene_expression_data = Gene_expression_data.loc[:, genes_to_keep]
+
+print(len(genes_to_keep))
+print(Gene_expression_data.head())
+
 
 #deseq needs samples as row index
 counts_df = Gene_expression_data
@@ -40,10 +55,9 @@ meta_df = pd.DataFrame(pd.concat(concat_list))
 samples_to_keep = ~meta_df.condition.isna()
 metadata = meta_df.loc[samples_to_keep]
 
-
+print(metadata.head())
 #subset counts to just the male and female samples
-print(counts_df.head())
-counts_df = counts_df.loc[meta_df.index]
+counts_df = counts_df.loc[metadata.index]
 
 genes_to_keep = counts_df.columns[counts_df.sum(axis=0) >= 10]
 counts_df = counts_df[genes_to_keep]
@@ -54,14 +68,10 @@ dds = DeseqDataSet(
     metadata=metadata,
     design="~condition",
     refit_cooks=True,
-    inference=inference,
-    # n_cpus=8, # n_cpus can be specified here or in the inference object
+    inference=inference
 )
 
-
-
 dds.deseq2()
-
 
 ds = DeseqStats(dds, contrast=["condition", "F", "M"], inference=inference)
 ds.summary()
