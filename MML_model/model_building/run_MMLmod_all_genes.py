@@ -46,7 +46,7 @@ net = pd.read_csv(f"{DATA_ROOT}/Full data files/network(full).tsv", sep='\t')
 #Load target gene expressions
 
 #try new filtering function
-gene_expressions = pd.read_csv((f"{DATA_ROOT}/Full data files/ARCHS4_healthy_log_noFMExternal.tsv"), sep='\t', header=0)
+gene_expressions = pd.read_csv((f"{DATA_ROOT}/Full data files/ARCHS4_healthy_log_noFMExternal_norm.tsv"), sep='\t', header=0)
 
 #for sensitivity analysis take 5000 random samples 
 #gene_expressions = gene_expressions.sample(4000)
@@ -63,7 +63,7 @@ def TF_subset(net, target_gene):
     return(list(net['TF'][net['Gene'] == target_gene]))
 
 #define training parameters
-learning_rate = 0.01
+learning_rate = 0.001
 #run 1 sample at a time, but run through each sample per training epoch
 batch_size = TF_expressions.shape[0]
 #max 100 epochs
@@ -103,7 +103,7 @@ for target_gene in gene_expressions.columns:
     dataset = CustomTFGE(device, TF_expressions=TF_expression_subset, gene_expressions=gene_expressions, network = net, target_gene = target_gene)
     train_dataset, test_dataset = torch.utils.data.random_split(dataset, [0.8, 0.2], generator=torch.Generator().manual_seed(42))
 
-    model = fullyConnectedModel(activation_function_map['MML'], TF_expression_subset.shape[1])
+    model = SimpleMMLModel(activation_function_map['MML'], TF_expression_subset.shape[1])
 
     if torch.cuda.device_count() > 1:
         model = nn.DataParallel(model)
@@ -148,7 +148,7 @@ for target_gene in gene_expressions.columns:
     results_df.loc[target_gene, 'train_loss'] = train_loss
     results_df.loc[target_gene, 'test_loss'] = test_loss
     results_df.loc[target_gene, 'in_features'] = len(TF_expression_subset.columns)
-    torch.save(model, f'../models/fully_connected_models/{target_gene}_model.pth')
+    torch.save(model, f'../models/log_norm_models/{target_gene}_model.pth')
 
 
 #train_actual.to_csv(f'{DATA_ROOT}/Train_dataset_actual_expressions_highLR.csv')
@@ -158,6 +158,6 @@ for target_gene in gene_expressions.columns:
 #test_predicted.to_csv(f'{DATA_ROOT}/Test_dataset_predicted_expressions_highLR.csv')
 
 
-results_df.to_csv('../../data/fully_connected_results.csv')
+results_df.to_csv('../../data/log_norm_results.csv')
 
-print('Finished fully connected models')
+print('Finished log norm connected models')

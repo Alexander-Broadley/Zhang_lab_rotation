@@ -4,13 +4,16 @@ from sklearn.ensemble import RandomForestRegressor
 from sklearn.linear_model import LinearRegression
 from sklearn.model_selection import train_test_split
 import matplotlib.pyplot as plt
+import time
 
 from scipy.stats import pearsonr
+from scipy.stats import spearmanr
 
 #import relevant functions for deep learning approach
 import sys
 import os
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
+
 
 from MML_model.model_building.filter_dataset import filter_datasets
 
@@ -21,8 +24,7 @@ net = pd.read_csv(f"{DATA_ROOT}/Full data files/network(full).tsv", sep='\t')
 
 TF_expressions, gene_expressions = filter_datasets(net, GE_df=gene_expressions)
 
-RF_results_df = pd.DataFrame(index = gene_expressions.columns, columns = ['train_PCC', 'test_PCC', 'male_PCC', 'female_PCC'])
-MLR_results_df = pd.DataFrame(index = gene_expressions.columns, columns = ['train_PCC', 'test_PCC', 'male_PCC', 'female_PCC'])
+MLR_results_df = pd.DataFrame(index = gene_expressions.columns, columns = ['train_PCC', 'test_PCC', 'male_PCC', 'female_PCC', 'train_SP', 'test_SP', 'male_SP', 'female_SP'])
 
 female_expressions = pd.read_csv(f'{DATA_ROOT}/Full data files/ARCHS4_female_external_expressions.tsv', index_col = 0, sep ='\t')
 male_expressions = pd.read_csv(f'{DATA_ROOT}/Full data files/ARCHS4_male_external_expressions.tsv', index_col = 0, sep ='\t')
@@ -30,7 +32,7 @@ male_expressions = pd.read_csv(f'{DATA_ROOT}/Full data files/ARCHS4_male_externa
 female_TF_expressions, female_gene_expressions = filter_datasets(net, GE_df=female_expressions)
 male_TF_expressions, male_gene_expressions = filter_datasets(net, GE_df=male_expressions)
 
-
+start_time = time.perf_counter()
 for target in gene_expressions.columns:
     print(f'Creating model for {target}')
     
@@ -53,14 +55,23 @@ for target in gene_expressions.columns:
     regressor = LinearRegression().fit(X_train, y_train)
 
     MLR_results_df.loc[target, 'train_PCC'] = pearsonr(regressor.predict(X_train), y_train).statistic
-    MLR_results_df.loc[target, 'test_pCC'] = pearsonr(regressor.predict(X_test), y_test).statistic
+    MLR_results_df.loc[target, 'test_PCC'] = pearsonr(regressor.predict(X_test), y_test).statistic
+
+    MLR_results_df.loc[target, 'train_SP'] = spearmanr(regressor.predict(X_train), y_train).statistic
+    MLR_results_df.loc[target, 'test_SP'] = spearmanr(regressor.predict(X_test), y_test).statistic
 
     MLR_results_df.loc[target, 'male_PCC'] = pearsonr(regressor.predict(male_TF_expression_subset), male_gene_expressions[target]).statistic
     MLR_results_df.loc[target, 'female_PCC'] = pearsonr(regressor.predict(female_TF_expression_subset), female_gene_expressions[target]).statistic
+
+    MLR_results_df.loc[target, 'male_SP'] = spearmanr(regressor.predict(male_TF_expression_subset), male_gene_expressions[target]).statistic
+    MLR_results_df.loc[target, 'female_SP'] = spearmanr(regressor.predict(female_TF_expression_subset), female_gene_expressions[target]).statistic
 
     #save the models
     from pickle import dump
     with open(f'./models/MLR/{target}.pkl', 'wb') as f:
         dump(regressor, f, protocol=5)
+end_time = time.perf_counter()
+
+print(f'Models trained in: {end_time - start_time}')
 
 MLR_results_df.to_csv('./data/MLR_regressor_results.csv')

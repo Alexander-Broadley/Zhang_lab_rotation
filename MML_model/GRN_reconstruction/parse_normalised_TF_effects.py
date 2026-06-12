@@ -34,7 +34,7 @@ gene_expressions = gene_expressions[high_MF_scores.index]
 
 #specify abs difference in relative contribution required to consider a TF a differential regulator of a TG
 #for threshold in [0.000000001, 0.01, 0.05, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1, 2, 3]:
-for threshold in [5, 10, 20, 50, 100, 200]:
+for threshold in [0.1, 0.5, 1, 2, 5, 10, 20, 50, 100, 200]:
     print(f'Processing across target genes for a threshold: {threshold}')
 
     for target in gene_expressions.columns:
