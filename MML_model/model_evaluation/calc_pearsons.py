@@ -152,7 +152,6 @@ samplewise_df_list.append(get_correlations_df(female_actual, female_predicted, d
 samplewise_df_list.append(get_correlations_df(male_actual, male_predicted, dataset_label='Male', rowise = True))
 
 samplewise_correlations = pd.concat(samplewise_df_list, ignore_index = True)
-#create_pearsons_violin(results_df=samplewise_correlations, title = 'Samplewise Pearsons Correlations for TPM models', file_title='samplewise_pearsons_TPM')
 create_pearsons_violin(results_df=samplewise_correlations, y_col='pearsons', title = f'Samplewise Pearsons Correlations', file_title= f'samplewise_pearsons{suffix}', figure_root=f'./figures/{suffix}')
 create_pearsons_violin(results_df=samplewise_correlations, y_col='spearmans', title = f'Samplewise Spearmans Correlations', file_title=f'samplewise_spearmans{suffix}', figure_root=f'./figures/{suffix}')
 #create_pearsons_violin(results_df=samplewise_correlations, y_col='MSE', title = f'Samplewise MSE', file_title=f'samplewise_MSE{suffix}', figure_root=f'./figures/{suffix}')
