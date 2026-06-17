@@ -25,22 +25,24 @@ plt.ylabel('Mean TF Expression in Female Samples')
 plt.xlabel('Mean TF Expression in Male Samples')
 plt.savefig(f'./figures/mean_TF_expressions_{threshold}_highAcc.png', dpi = 300)
 
-fig, ax = plt.subplots(ncols = 1, figsize = (7, 5))
+fig, ax = plt.subplots(ncols = 1, figsize = (10, 8))
 sns.scatterplot(results, x = 'Male_target_mean_exp', y = 'Female_target_mean_exp', s = 2, color = "#0a7126", legend = False, ax = ax)
 plt.ylabel('Mean TG Expression in Female Samples')
 plt.xlabel('Mean TG Expression in Male Samples')
 plt.savefig(f'./figures/mean_TG_expressions_{threshold}_highAcc.png', dpi = 300)
 
-fig, ax = plt.subplots(ncols = 1, figsize = (7, 5))
+fig, ax = plt.subplots(ncols = 1, figsize = (10, 8))
 ((results['TF'].value_counts()/15199)*100).plot(kind = 'hist', color = '#1b2fb3', bins = 10, ax = ax)
-ax.set_xlabel('Percentage of Target Genes Differentially Regulated per TF', fontsize = 10)
-ax.set_ylabel('Frequency', fontsize = 10)
+ax.set_xlabel('Percentage of Target Genes Differentially Regulated per TF', fontsize = 15)
+ax.set_ylabel('Frequency', fontsize = 15)
+ax.tick_params(axis='both', which='major', labelsize=15)
 plt.savefig(f'./figures/per_TF_percent_diff_regged_{threshold}_highAcc.png', dpi = 300)
 
-fig, ax = plt.subplots(ncols = 1, figsize = (7, 5))
-sns.scatterplot(results, x = 'TF_exp_difference', y = 'abs_diff', s = 1.5, color = '#1b2fb3', legend = False, ax = ax)
-plt.ylabel('Absolute Difference in Normalised Contribution')
-plt.xlabel('Absolute Difference in Mean TF Expression')
+fig, ax = plt.subplots(ncols = 1, figsize = (10, 8))
+sns.scatterplot(results, x = 'TF_exp_difference', y = 'abs_diff', s = 8, color = '#1b2fb3', legend = False, ax = ax)
+plt.ylabel('Absolute Difference in Normalised Contribution', fontsize = 15)
+plt.xlabel('Absolute Difference in Mean TF Expression', fontsize = 15)
+ax.tick_params(axis='both', which='major', labelsize=15)
 plt.savefig(f'./figures/abs_diff_contribution_expression_{threshold}_highAcc.png', dpi = 300)
 
 diff_regulated = set(results['TG'])
@@ -62,6 +64,11 @@ with open(f'./data/{threshold}_differential_all_highAcc.txt', 'w+') as f:
 f.close
 
 #get target gene specific info at given threshold
+
+with open(f'./data/{threshold}_JUND.csv', 'w+') as f:
+    for gene in results[results['TF'] == 'JUND']['TG']:
+        f.write(f'{gene}\n')
+f.close
 
 for target in ['MBOAT7', 'CYP7B1', 'JUND', "CYP1A1",  "CYP1A2", "CYP1B1"]:
     target_res = results[results['TF'] == target]

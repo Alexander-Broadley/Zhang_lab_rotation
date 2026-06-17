@@ -35,6 +35,11 @@ Gene_expression_data = Gene_expression_data.loc[:, genes_to_keep]
 print(len(genes_to_keep))
 print(Gene_expression_data.head())
 
+with open(f'./data/DGE_backgroud.txt', 'w+') as f:
+    for gene in genes_to_keep:
+        f.write(f'{gene}\n')
+f.close
+
 
 #deseq needs samples as row index
 counts_df = Gene_expression_data

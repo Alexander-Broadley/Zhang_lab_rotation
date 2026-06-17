@@ -6,6 +6,7 @@ from torch import nn
 from torch.utils.data import Dataset
 from torch.utils.data import DataLoader
 from torch import tensor
+import time
 import matplotlib.pyplot as plt
 
 import numpy as np
@@ -87,7 +88,12 @@ test_actual = pd.DataFrame(columns=gene_expressions.columns)
 
 print('TF expressions shape:', TF_expressions.shape)
 print('Target gene expressions shape:', gene_expressions.shape)
+print(f'There are {len(set(TF_expressions.columns) & set(gene_expressions.columns))} genes that are TFs and TGs')
+print(f'There are {len(set(TF_expressions.columns))} TFs')
+print(f'There are {len(set(gene_expressions.columns))}  TGs')
 #for the remaining code need to execute per target gene (per gene in gene_expressions)
+
+start_time = time.perf_counter()
 for target_gene in gene_expressions.columns:
     print(f'Creating model for {target_gene}')
     
@@ -149,15 +155,15 @@ for target_gene in gene_expressions.columns:
     results_df.loc[target_gene, 'test_loss'] = test_loss
     results_df.loc[target_gene, 'in_features'] = len(TF_expression_subset.columns)
     torch.save(model, f'../models/log_norm_models/{target_gene}_model.pth')
+end_time = time.perf_counter()
 
+train_actual.to_csv(f'{DATA_ROOT}/Train_dataset_actual_expressions_norm.csv')
+train_predicted.to_csv(f'{DATA_ROOT}/Train_dataset_predicted_expressions_norm.csv')
 
-#train_actual.to_csv(f'{DATA_ROOT}/Train_dataset_actual_expressions_highLR.csv')
-#train_predicted.to_csv(f'{DATA_ROOT}/Train_dataset_predicted_expressions_highLR.csv')
-
-#test_actual.to_csv(f'{DATA_ROOT}/Test_dataset_actual_expressions_highLR.csv')
-#test_predicted.to_csv(f'{DATA_ROOT}/Test_dataset_predicted_expressions_highLR.csv')
+test_actual.to_csv(f'{DATA_ROOT}/Test_dataset_actual_expressions_norm.csv')
+test_predicted.to_csv(f'{DATA_ROOT}/Test_dataset_predicted_expressions_norm.csv')
 
 
 results_df.to_csv('../../data/log_norm_results.csv')
-
-print('Finished log norm connected models')
+print(f'Models trained in: {end_time - start_time}')
+print('Finished log norm  models')

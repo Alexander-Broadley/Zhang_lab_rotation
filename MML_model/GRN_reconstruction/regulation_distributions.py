@@ -36,11 +36,11 @@ net = pd.read_csv(f"{DATA_ROOT}/Full data files/network(full).tsv", sep='\t')
 #Load target gene expressions
 
 #define the sex of the samples getting reg contributions for
-sex = 'male'
-#sex = 'female'
+#sex = 'male'
+sex = 'female'
 
 #try new filtering function
-gene_expressions = pd.read_csv((f"{DATA_ROOT}/Full data files/ARCHS4_{sex}_external_expressions.tsv"), sep='\t', header=0, index_col = 0)
+gene_expressions = pd.read_csv((f"{DATA_ROOT}/Full data files/ARCHS4_{sex}_external_expressions_norm.tsv"), sep='\t', header=0, index_col = 0)
 
 
 TF_expressions, gene_expressions = filter_datasets(net, GE_df=gene_expressions)
@@ -68,7 +68,7 @@ for target_gene in gene_expressions.columns:
 
     dataset = CustomTFGE(device, TF_expressions=TF_expression_subset, gene_expressions=gene_expressions, network = net, target_gene = target_gene)
 
-    model = torch.load(f"{MODEL_ROOT}/MF_external_models/{target_gene}_model.pth", weights_only = False)
+    model = torch.load(f"{MODEL_ROOT}/log_norm_models/{target_gene}_model.pth", weights_only = False)
     eval_dataloader = DataLoader(dataset, batch_size=1, shuffle=False)
     model.eval()
 
@@ -84,6 +84,5 @@ for target_gene in gene_expressions.columns:
                 contributions_df.loc[int(batch)] = [0] * len(contributions)
             else:
                 contributions_df.loc[int(batch)] = contributions/normalising_constant
-        print(contributions_df)
 
-    contributions_df.to_csv(f'./data/{sex}_contribution_dists/{target_gene}_reg_cont_distributions.csv')
+    contributions_df.to_csv(f'./data/{sex}_contribution_dists_norm/{target_gene}_reg_cont_distributions.csv')

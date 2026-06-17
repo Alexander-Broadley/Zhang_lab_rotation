@@ -13,18 +13,18 @@ from model_building.filter_dataset import filter_datasets
 DATA_ROOT = '../../data'
 
 net = pd.read_csv(f"{DATA_ROOT}/Full data files/network(full).tsv", sep='\t')
-gene_expressions = pd.read_csv((f"/home/alexanderb/Zhang_lab/data/Full data files/ARCHS4_healthy_log_noFMExternal.tsv"), sep='\t', header=0)
+gene_expressions = pd.read_csv((f"/home/alexanderb/Zhang_lab/data/Full data files/ARCHS4_healthy_log_noFMExternal_norm.tsv"), sep='\t', header=0)
 TF_expressions, gene_expressions = filter_datasets(net, GE_df=gene_expressions)
 
 #load actual expressions
-actual_female_expressions = pd.read_csv('/home/alexanderb/Zhang_lab/data/Full data files/ARCHS4_female_external_expressions.tsv', sep ='\t', index_col = 0)
-actual_male_expressions = pd.read_csv('/home/alexanderb/Zhang_lab/data/Full data files/ARCHS4_male_external_expressions.tsv', sep ='\t', index_col = 0)
+actual_female_expressions = pd.read_csv('/home/alexanderb/Zhang_lab/data/Full data files/ARCHS4_female_external_expressions_norm.tsv', sep ='\t', index_col = 0)
+actual_male_expressions = pd.read_csv('/home/alexanderb/Zhang_lab/data/Full data files/ARCHS4_male_external_expressions_norm.tsv', sep ='\t', index_col = 0)
 
 #create list of DFs to join at the end to minimise memory duplications
 df_list = []
 
 #load PCC from external male and female samples (do not need to transform these)
-MF_scores = pd.read_csv(f'{DATA_ROOT}/female_male_PCC.csv', index_col = 0)
+MF_scores = pd.read_csv(f'{DATA_ROOT}/female_male_PCC_norm.csv', index_col = 0)
 
 #get only TGs with better than 80% correlation in male and females
 high_MF_scores = MF_scores[(MF_scores['female_PCC'] > 0.7) & (MF_scores['male_PCC'] > 0.7)]

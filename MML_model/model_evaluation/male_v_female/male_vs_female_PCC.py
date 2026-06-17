@@ -35,19 +35,8 @@ net = pd.read_csv(f"{DATA_ROOT}/Full data files/network(full).tsv", sep='\t')
 
 from model_building.filter_dataset import filter_datasets
 
-#try new filtering function
-#gene_expressions = pd.read_csv((f"{DATA_ROOT}/Full data files/ARCHS4_healthy_log.tsv"), sep='\t', header=0, index_col=0)
-
-#load male and female metadata
-#female_sample_IDs = pd.read_csv(f'{DATA_ROOT}/Full data files/ARCHS4_female_external_meta.csv', index_col=0).index
-#male_sample_IDs = pd.read_csv(f'{DATA_ROOT}/Full data files/ARCHS4_male_external_meta.csv', index_col=0).index
-
-#split the datasets into male and female before indexes are reset
-#female_expressions = gene_expressions.loc[female_sample_IDs]
-#male_expressions = gene_expressions.loc[male_sample_IDs]
-
-female_expressions = pd.read_csv(f'{DATA_ROOT}/Full data files/ARCHS4_female_external_expressions.tsv', index_col = 0, sep ='\t')
-male_expressions = pd.read_csv(f'{DATA_ROOT}/Full data files/ARCHS4_male_external_expressions.tsv', index_col = 0, sep ='\t')
+female_expressions = pd.read_csv(f'{DATA_ROOT}/Full data files/ARCHS4_female_external_expressions_norm.tsv', index_col = 0, sep ='\t')
+male_expressions = pd.read_csv(f'{DATA_ROOT}/Full data files/ARCHS4_male_external_expressions_norm.tsv', index_col = 0, sep ='\t')
 
 print(female_expressions.head(n = 2))
 print(male_expressions.head(n = 2))
@@ -102,7 +91,7 @@ for target_gene in female_gene_expressions.columns:
     male_dataloader = DataLoader(male_dataset, batch_size=len(male_dataset), shuffle=False)
 
     #load desired models
-    model = torch.load(f"{MODEL_ROOT}/MF_external_models/{target_gene}_model.pth", weights_only = False)
+    model = torch.load(f"{MODEL_ROOT}/log_norm_models/{target_gene}_model.pth", weights_only = False)
     model.to(device)
     
     #print(f'Getting PCC for {target_gene} model')
@@ -121,9 +110,9 @@ for target_gene in female_gene_expressions.columns:
             male_predicted[target_gene] = np.asarray(model(X).cpu())
 
 
-male_predicted.to_csv(f'{DATA_ROOT}/male_predicted_gene_expressions.csv')
-female_predicted.to_csv(f'{DATA_ROOT}/female_predicted_gene_expressions.csv')
-male_actual.to_csv(f'{DATA_ROOT}/male_actual_gene_expressions.csv')
-female_actual.to_csv(f'{DATA_ROOT}/female_actual_gene_expressions.csv')
+male_predicted.to_csv(f'{DATA_ROOT}/male_predicted_gene_expressions_norm.csv')
+female_predicted.to_csv(f'{DATA_ROOT}/female_predicted_gene_expressions_norm.csv')
+male_actual.to_csv(f'{DATA_ROOT}/male_actual_gene_expressions_norm.csv')
+female_actual.to_csv(f'{DATA_ROOT}/female_actual_gene_expressions_norm.csv')
 
-results_df.to_csv(f'{DATA_ROOT}/female_male_PCC.csv')
+results_df.to_csv(f'{DATA_ROOT}/female_male_PCC_norm.csv')

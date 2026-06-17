@@ -38,27 +38,15 @@ train_predicted_TPM = train_predicted_TPM.dropna(axis=1, how='all')
 train_actual_TPM = train_actual_TPM.dropna(axis=1, how='all')
 test_predicted_TPM = test_predicted_TPM.dropna(axis=1, how='all')
 test_actual_TPM = test_actual_TPM.dropna(axis=1, how='all')
-#external_predicted_TPM = external_actual_TPM.dropna(axis=1, how='all')
-#external_actual_TPM = external_actual_TPM.dropna(axis=1, how='all')
-
-
-#remove columns for genes that no models exist for
-#external_predicted_TPM.drop(['SHOX', 'ZBED1'], axis = 1, inplace = True)
-
-#temporary before fixing code for external model creation - drop all NA columns
-#external_predicted_TPM = external_predicted_TPM.dropna(axis=1, how='all')
-#external_actual_TPM = external_actual_TPM[external_predicted_TPM.columns]
 
 #ensure column indexes (genes) are in the same order across datasets
 train_actual_TPM = test_actual_TPM[train_predicted_TPM.columns]
 test_actual_TPM = test_actual_TPM[test_predicted_TPM.columns]
 female_actual = female_actual[female_predicted.columns]
 male_actual = male_actual[male_predicted.columns]
-#external_actual_TPM = external_actual_TPM[external_predicted_TPM.columns]
 print('Loaded Datasets')
 
-#print(external_actual_TPM.head())
-#print(external_predicted_TPM.head())
+
 
 #======================================================================
 #calculate sample wise correlation values
