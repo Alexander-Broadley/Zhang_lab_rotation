@@ -121,6 +121,7 @@ def get_correlations_df(df1, df2, dataset_label, rowise = True):
         df2 = df2.T
 
     for i in range(0, df1.shape[0]):
+        print(df1.iloc[i, :], df2.iloc[i, :])
         results_df.loc[i, "pearsons"] = scipy.stats.pearsonr(df1.iloc[i, :], df2.iloc[i, :]).statistic
         results_df.loc[i, 'spearmans'] = scipy.stats.spearmanr(df1.iloc[i, :], df2.iloc[i, :]).statistic
         #results_df.loc[i, 'MSE'] = mean_squared_error(df1.iloc[i, :], df2.iloc[i, :])
@@ -131,7 +132,7 @@ def get_correlations_df(df1, df2, dataset_label, rowise = True):
     #results_df['dataset'] = dataset_label
 
     return(results_df)
-
+'''
 print('Calculating Samplewise Correlations')
 samplewise_df_list = []
 samplewise_df_list.append(get_correlations_df(train_actual_TPM, train_predicted_TPM, dataset_label='Train', rowise = True))
@@ -143,7 +144,7 @@ samplewise_correlations = pd.concat(samplewise_df_list, ignore_index = True)
 create_pearsons_violin(results_df=samplewise_correlations, y_col='pearsons', title = f'Samplewise Pearsons Correlations', file_title= f'samplewise_pearsons{suffix}', figure_root=f'./figures/{suffix}')
 create_pearsons_violin(results_df=samplewise_correlations, y_col='spearmans', title = f'Samplewise Spearmans Correlations', file_title=f'samplewise_spearmans{suffix}', figure_root=f'./figures/{suffix}')
 #create_pearsons_violin(results_df=samplewise_correlations, y_col='MSE', title = f'Samplewise MSE', file_title=f'samplewise_MSE{suffix}', figure_root=f'./figures/{suffix}')
-
+'''
 print('Finished Samplewise Calculations')
 
 print('Calculating Genewise Correlations')

@@ -19,12 +19,12 @@ TF_expressions, gene_expressions = filter_datasets(net, GE_df=gene_expressions)
 for target in gene_expressions.columns:
     print(f'Processing {target} scores')
     #for now manually load dist for one target gene
-    male_target_contribs = pd.read_csv(f'./data/male_contribution_dists/{target}_reg_cont_distributions.csv', index_col = 0)
-    female_target_contribs = pd.read_csv(f'./data/female_contribution_dists/{target}_reg_cont_distributions.csv', index_col = 0)
+    male_target_contribs = pd.read_csv(f'./data/male_contribution_dists_norm/{target}_reg_cont_distributions.csv', index_col = 0)
+    female_target_contribs = pd.read_csv(f'./data/female_contribution_dists_norm/{target}_reg_cont_distributions.csv', index_col = 0)
     #iterate through TFs in male_target_contribs (same as in female)
     results_df = pd.DataFrame(columns = ['abs_mean_cont_diff'])
     for TF in male_target_contribs.columns:
         #take the difference between the two columns
         sex_differential = abs(np.mean(male_target_contribs[TF]) - np.mean(female_target_contribs[TF]))
         results_df.loc[TF, 'abs_mean_cont_diff'] = sex_differential
-    results_df.to_csv(f'./data/differential_relative_effect_sizes/{target}_DRE_norm.csv')
+    results_df.to_csv(f'./data/differential_relative_effect_sizes_norm/{target}_DRE_norm.csv')

@@ -12,7 +12,7 @@ GRN_ROOT = './data'
 #sex = '_MALE'
 sex = ''
 
-GRN = pd.read_csv(f'{GRN_ROOT}/100per_act_inferred_GRN{sex}.csv', index_col = 0)
+GRN = pd.read_csv(f'{GRN_ROOT}/100per_act_inferred_GRN{sex}_norm.csv', index_col = 0)
 print(GRN.head())
 
 #add a regulatory nature column
@@ -53,21 +53,21 @@ TF_TG_out_degrees = {k: out_degree_dict[k] for k in TF_TGs}
 
 #plot out degree distributions (of nodes that will have it)
 fig, ax = plt.subplots(ncols = 2, figsize = (15, 5))
-ax[0].hist(TF_out_degrees.values(), bins = 20, color = '#b00000')
+ax[0].hist(TF_out_degrees.values(), bins = 15, color = '#b00000')
 ax[0].set_title('TFs (Only)', fontsize = 15)
-ax[1].hist(TF_TG_out_degrees.values(), bins = 20, color = '#6b00d6')
+ax[1].hist(TF_TG_out_degrees.values(), bins = 15, color = '#6b00d6')
 ax[1].set_title('TF and Target Genes', fontsize = 15)
 fig.suptitle('Out Degree Distributions', fontsize = 20)
-plt.savefig('./figures/OutDistributions', dpi = 300)
+plt.savefig('./figures/OutDistributions_norm', dpi = 300)
 
 #plot in degree distributions (of nodes that will have it)
 fig, ax = plt.subplots(ncols = 2, figsize = (15, 5))
-ax[0].hist(TG_in_degrees.values(), bins = 20, color = '#03038f')
+ax[0].hist(TG_in_degrees.values(), bins = 15, color = '#03038f')
 ax[0].set_title('Target Genes (Only)', fontsize = 15)
-ax[1].hist(TF_TG_in_degrees.values(), bins = 20, color = '#6b00d6')
+ax[1].hist(TF_TG_in_degrees.values(), bins = 15, color = '#6b00d6')
 ax[1].set_title('TF and Target Genes', fontsize = 15)
 fig.suptitle('In Degree Distributions', fontsize = 20)
-plt.savefig('./figures/InDistributions', dpi = 300)
+plt.savefig('./figures/InDistributions_norm', dpi = 300)
 
 #calculate centralities of TF_TGs
 degree_centralities = nx.degree_centrality(graph)
@@ -87,7 +87,7 @@ sns.move_legend(ax, "upper left", bbox_to_anchor=(1, 1))
 ax.set_ylabel('Out Degree', fontsize = 15)
 ax.set_xlabel('In Degree', fontsize = 15)
 ax.set_title('TF-TG Connectedness', fontsize = 20)
-plt.savefig(f'./figures/InOutConnectednessTFTG{sex}', dpi = 300, bbox_inches = 'tight')
+plt.savefig(f'./figures/InOutConnectednessTFTG{sex}_norm', dpi = 300, bbox_inches = 'tight')
 
 #plot in and out degree coloured by betweenes
 fig, ax = plt.subplots(1)
@@ -96,4 +96,4 @@ sns.move_legend(ax, "upper left", bbox_to_anchor=(1, 1))
 ax.set_ylabel('Out Degree', fontsize = 15)
 ax.set_xlabel('In Degree', fontsize = 15)
 ax.set_title('TF-TG Betweeness', fontsize = 20)
-plt.savefig(f'./figures/InOutBetweenessTFTG{sex}', dpi = 300, bbox_inches = 'tight')
+plt.savefig(f'./figures/InOutBetweenessTFTG{sex}_norm', dpi = 300, bbox_inches = 'tight')
