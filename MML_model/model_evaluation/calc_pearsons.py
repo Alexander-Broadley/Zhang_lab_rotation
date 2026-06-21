@@ -10,7 +10,7 @@ DATA_ROOT = '../../data'
 FIGURE_ROOT = './figures'
 
 #determines which set of models to use
-suffix = '_MF_external'
+suffix = '_norm'
 
 #======================================================================
 #load expressions datasets
@@ -24,15 +24,12 @@ train_actual_TPM = pd.read_csv(f"{DATA_ROOT}/Train_dataset_actual_expressions{su
 test_predicted_TPM = pd.read_csv(f"{DATA_ROOT}/Test_dataset_predicted_expressions{suffix}.csv", index_col=0, header=0)
 test_actual_TPM = pd.read_csv(f"{DATA_ROOT}/Test_dataset_actual_expressions{suffix}.csv", index_col=0, header=0)
 
-female_actual = pd.read_csv(f"{DATA_ROOT}/female_actual_gene_expressions.csv", index_col = 0)
-female_predicted = pd.read_csv(f"{DATA_ROOT}/female_predicted_gene_expressions.csv", index_col = 0)
+female_actual = pd.read_csv(f"{DATA_ROOT}/female_actual_gene_expressions_norm.csv", index_col = 0)
+female_predicted = pd.read_csv(f"{DATA_ROOT}/female_predicted_gene_expressions_norm.csv", index_col = 0)
 
-male_actual = pd.read_csv(f"{DATA_ROOT}/male_actual_gene_expressions.csv", index_col = 0)
-male_predicted = pd.read_csv(f"{DATA_ROOT}/male_predicted_gene_expressions.csv", index_col = 0)
-'''
-external_actual_TPM = pd.read_csv(f"{DATA_ROOT}/Full data files/Liver_bulk_external.tsv", sep = '\t', index_col=0, header=0)
-external_predicted_TPM = pd.read_csv(f"{DATA_ROOT}/external_predicted_expressions{suffix}.csv", index_col=0, header=0)
-'''
+male_actual = pd.read_csv(f"{DATA_ROOT}/male_actual_gene_expressions_norm.csv", index_col = 0)
+male_predicted = pd.read_csv(f"{DATA_ROOT}/male_predicted_gene_expressions_norm.csv", index_col = 0)
+
 #remove columns for genes that no models exist for
 train_predicted_TPM = train_predicted_TPM.dropna(axis=1, how='all')
 train_actual_TPM = train_actual_TPM.dropna(axis=1, how='all')

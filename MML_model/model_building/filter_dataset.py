@@ -1,7 +1,5 @@
 #script for standard dataset filtering done for all models
 #removal of TF if TF is the target gene is done in a model specific manner
-import pandas as pd
-
 def filter_datasets(net, GE_df):
     '''
     Takes a network file with two columns, 'Gene' and 'TF' and filters a gene expression dataframe (where column names are gene names), splitting it into two dataframes consisting of TF and gene expressions.

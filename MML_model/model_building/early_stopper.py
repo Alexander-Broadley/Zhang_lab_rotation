@@ -1,5 +1,4 @@
 #early stopping object adapted from: https://medium.com/biased-algorithms/a-practical-guide-to-implementing-early-stopping-in-pytorch-for-model-training-99a7cbd46e9d
-
 class EarlyStopping:
     def __init__(self, patience=3, delta=0, verbose=False):
         self.patience = patience

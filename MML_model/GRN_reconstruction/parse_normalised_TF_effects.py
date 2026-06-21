@@ -65,4 +65,4 @@ for threshold in [0.1, 0.5, 1, 2, 5, 10, 20, 50, 100, 200]:
         df_list.append(results_df)
 
     final_results = pd.concat(df_list, axis = 0, ignore_index=True)
-    final_results.to_csv(f'./data/GW_diff_regulatorts_{threshold}_highAcc.csv')
+    final_results.to_csv(f'./data/GW_diff_regulatorts_{threshold}_norm.csv')

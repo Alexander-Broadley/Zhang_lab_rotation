@@ -40,7 +40,7 @@ class CustomTFGE(Dataset):
         self.gene_expressions = torch.tensor(np.asarray(self.gene_expressions), dtype = torch.float32, device = device)
 
     def __len__(self):
-        #length of the dataset is the number of samples (not TFs in the dataset) - 15935
+        #length of the dataset is the number of samples (not TFs in the dataset)
         return self.TF_expressions.shape[1]
 
     def __getitem__(self, idx):

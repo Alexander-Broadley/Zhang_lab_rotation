@@ -3,6 +3,7 @@ import pandas as pd
 import numpy as np
 import os
 import sys
+from scipy.stats import spearmanr
 
 from torch.utils.data import DataLoader
 from torch import nn
@@ -58,7 +59,7 @@ from model_building.pearsons_loss import PearsonLoss
 loss_fn = PearsonLoss()
 
 #initialise external dataset predicted values df
-results_df = pd.DataFrame(columns = ['female_PCC', 'male_PCC'], index = female_gene_expressions.columns)
+results_df = pd.DataFrame(columns = ['female_PCC', 'male_PCC', 'female_SPC', 'male_SPC'], index = female_gene_expressions.columns)
 
 #also record raw and predicted expressions for each sample
 female_actual = pd.DataFrame(index = female_TF_expressions.index, columns= female_TF_expressions.columns)
@@ -93,12 +94,12 @@ for target_gene in female_gene_expressions.columns:
     #load desired models
     model = torch.load(f"{MODEL_ROOT}/log_norm_models/{target_gene}_model.pth", weights_only = False)
     model.to(device)
-    
-    #print(f'Getting PCC for {target_gene} model')
+
 
     #for both dataloaders load all samples (batch size is the same as the length of the dataset), get the batch loss for each
     results_df.loc[target_gene, 'female_PCC'] = 1 - batch_loss(female_dataloader, model, loss_fn)   
     results_df.loc[target_gene, 'male_PCC'] = 1 - batch_loss(male_dataloader, model, loss_fn)
+
 
     model.eval()
     with torch.no_grad():

@@ -1,3 +1,4 @@
+#RF and MLR trained in separate scripts for easiest parallelisation - ran one per screen
 import pandas as pd
 import numpy as np
 import xgboost as xgb
@@ -19,14 +20,15 @@ sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 from MML_model.model_building.filter_dataset import filter_datasets
 
 DATA_ROOT = '../data'
-
+#load log normalised data
 gene_expressions = pd.read_csv(f'{DATA_ROOT}/Full data files/ARCHS4_healthy_log_noFMExternal_norm.tsv', sep = '\t', index_col = 0, header = 0)
 net = pd.read_csv(f"{DATA_ROOT}/Full data files/network(full).tsv", sep='\t')
-
+#filter dataset in same way as DL model
 TF_expressions, gene_expressions = filter_datasets(net, GE_df=gene_expressions)
 
+#load external male and female samples
 RF_results_df = pd.DataFrame(index = gene_expressions.columns, columns = ['train_PCC', 'test_PCC', 'male_PCC', 'female_PCC', 'train_SP', 'test_SP', 'male_SP', 'female_SP'])
-
+#filter these as well
 female_expressions = pd.read_csv(f'{DATA_ROOT}/Full data files/ARCHS4_female_external_expressions_norm.tsv', index_col = 0, sep ='\t')
 male_expressions = pd.read_csv(f'{DATA_ROOT}/Full data files/ARCHS4_male_external_expressions_norm.tsv', index_col = 0, sep ='\t')
 
@@ -51,11 +53,13 @@ for target in gene_expressions.columns:
     X = TF_expression_subset
     y = gene_expressions[target]
 
+    #create 80/20 split train test datasets
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state = 42)
 
+    #fit the regressor to training data
     rf = xgb.XGBRFRegressor(n_estimators = 3, random_state = 42).fit(X_train, y_train)
 
-    #put PPC on train and test in a dataframe
+    #record spearmans and pearsons correlation across the 4 datasets
     RF_results_df.loc[target, 'train_PCC'] = pearsonr(rf.predict(X_train), y_train).statistic
     RF_results_df.loc[target, 'test_PCC'] = pearsonr(rf.predict(X_test), y_test).statistic
 
@@ -74,5 +78,5 @@ for target in gene_expressions.columns:
 end_time = time.perf_counter()
 
 print(f'Models trained in: {end_time - start_time}')
-
+#save the results
 RF_results_df.to_csv('./data/RF_regressor_results_norm.csv')
