@@ -11,6 +11,7 @@ import matplotlib.pyplot as plt
 
 import numpy as np
 import pandas as pd
+import scipy
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 
@@ -48,14 +49,15 @@ gene_expressions = pd.read_csv((f"{DATA_ROOT}/Full data files/ARCHS4_healthy_log
 
 #filter expression dataset and split into TFs and TGs
 TF_expressions, gene_expressions = filter_datasets(net, GE_df=gene_expressions)
-print(gene_expressions.head())
-print(TF_expressions.head())
 
-#define function to subset transcription factors to only those that directly regulate the target gene
-def TF_subset(net, target_gene):
-    #simpler version as per discussion w/ Cheng
-    #returns all the TFs in the network that directly connect to the target gene
-    return(list(net['TF'][net['Gene'] == target_gene]))
+female_expressions = pd.read_csv(f'{DATA_ROOT}/Full data files/ARCHS4_female_external_expressions_norm.tsv', index_col = 0, sep ='\t')
+male_expressions = pd.read_csv(f'{DATA_ROOT}/Full data files/ARCHS4_male_external_expressions_norm.tsv', index_col = 0, sep ='\t')
+
+print(female_expressions.head(n = 2))
+print(male_expressions.head(n = 2))
+
+female_TF_expressions, female_gene_expressions = filter_datasets(net, GE_df=female_expressions)
+male_TF_expressions, male_gene_expressions = filter_datasets(net, GE_df=male_expressions)
 
 #define training parameters
 learning_rate = 0.0001
@@ -69,16 +71,20 @@ from model_building.pearsons_loss import PearsonLoss
 loss_fn = PearsonLoss()
 
 #create a results dataframe - means don't have to re-calculate later
-results_df = pd.DataFrame(index = gene_expressions.columns, columns = ['train_loss', 'test_loss', 'stopped_early', 'stopped_epoch','in_features'])
+results_df = pd.DataFrame(index = gene_expressions.columns, columns = ['train_loss', 'test_loss', 'stopped_early', 'stopped_epoch','in_features', 'train_PCC', 'test_PCC', 'train_SRCC', 'test_SRCC', 'male_PCC', 'female_PCC', 'male_SRCC', 'female_SRCC'])
 
 #create dataframes to track the predicted and actual expressions for train and test datasets - recreating datasets with pytorch is unreliable and cannot store 161000 datasets
 #intialise training dataset predicted values df
 train_predicted = pd.DataFrame(columns=gene_expressions.columns)
 test_predicted = pd.DataFrame(columns=gene_expressions.columns)
+male_predicted = pd.DataFrame(columns=gene_expressions.columns)
+female_predicted = pd.DataFrame(columns=gene_expressions.columns)
 
 #initialise training dataset actual values df - easier to do it this way as can get values after torch train-test split
 train_actual = pd.DataFrame(columns=gene_expressions.columns)
 test_actual = pd.DataFrame(columns=gene_expressions.columns)
+male_actual = pd.DataFrame(columns=gene_expressions.columns)
+female_actual = pd.DataFrame(columns=gene_expressions.columns)
 
 print('TF expressions shape:', TF_expressions.shape)
 print('Target gene expressions shape:', gene_expressions.shape)
@@ -95,16 +101,22 @@ for target_gene in gene_expressions.columns:
     if target_gene in TF_expressions.columns:
         print('Target gene is a TF, removing from TF dataset')
         TF_expression_subset = TF_expressions.drop(target_gene, axis = 1)
+        female_TF_expression_subset = female_TF_expressions.drop(target_gene, axis = 1)
+        male_TF_expression_subset = male_TF_expressions.drop(target_gene, axis = 1)
     else:
          TF_expression_subset = TF_expressions
+         female_TF_expression_subset = female_TF_expressions
+         male_TF_expression_subset = male_TF_expressions
 
     #initialise an early stopper to end training if loss on test data does not fall by at least 0.01 for 3 eopochs in a row
     early_stopping = EarlyStopping(patience=3, delta=0.005, verbose=True)
     
     #initailise dataset
     dataset = CustomTFGE(device, TF_expressions=TF_expression_subset, gene_expressions=gene_expressions, network = net, target_gene = target_gene)
-    #split into 80% train 80% test
+    #split into 80% train 20% test
     train_dataset, test_dataset = torch.utils.data.random_split(dataset, [0.8, 0.2], generator=torch.Generator().manual_seed(42))
+    female_dataset = CustomTFGE(device, TF_expressions=female_TF_expressions, gene_expressions=female_gene_expressions, network = net, target_gene = target_gene)
+    male_dataset = CustomTFGE(device, TF_expressions=male_TF_expressions, gene_expressions=male_gene_expressions, network = net, target_gene = target_gene)
 
     #intialise model
     model = SimpleMMLModel(activation_function_map['MML'], TF_expression_subset.shape[1])
@@ -121,6 +133,9 @@ for target_gene in gene_expressions.columns:
     #create train and test dataloaders
     train_dataloader = DataLoader(train_dataset, batch_size=batch_size, shuffle=False)
     test_dataloader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False)
+    female_dataloader = DataLoader(female_dataset, batch_size=len(female_dataset), shuffle=False)
+    male_dataloader = DataLoader(male_dataset, batch_size=len(male_dataset), shuffle=False)
+    
 
     for t in range(epochs):
         #train one epoch, store train and test loss
@@ -149,9 +164,29 @@ for target_gene in gene_expressions.columns:
             train_predicted[target_gene] = model(X).cpu()
             train_actual[target_gene] = y.cpu()
 
+            results_df.loc[target_gene, 'train_PCC'] = scipy.stats.pearsonr(model(X).cpu(), y.cpu()).statistic
+            results_df.loc[target_gene, 'train_SRCC'] = scipy.stats.spearmanr(model(X).cpu(), y.cpu()).statistic
+
         for batch, (X, y) in enumerate(test_dataloader):
             test_predicted[target_gene] = model(X).cpu()
             test_actual[target_gene] = y.cpu()
+
+            results_df.loc[target_gene, 'test_PCC'] = scipy.stats.pearsonr(model(X).cpu(), y.cpu()).statistic
+            results_df.loc[target_gene, 'test_SRCC'] = scipy.stats.spearmanr(model(X).cpu(), y.cpu()).statistic
+
+        for batch, (X, y) in enumerate(female_dataloader):  
+            female_actual[target_gene] = np.asarray(y.cpu())
+            female_predicted[target_gene] = np.asarray(model(X).cpu())
+
+            results_df.loc[target_gene, 'female_PCC'] = scipy.stats.pearsonr(model(X).cpu(), y.cpu()).statistic
+            results_df.loc[target_gene, 'female_SRCC'] = scipy.stats.spearmanr(model(X).cpu(), y.cpu()).statistic
+
+        for batch, (X, y) in enumerate(male_dataloader):  
+            male_actual[target_gene] = np.asarray(y.cpu())
+            male_predicted[target_gene] = np.asarray(model(X).cpu())
+
+            results_df.loc[target_gene, 'male_PCC'] = scipy.stats.pearsonr(model(X).cpu(), y.cpu()).statistic
+            results_df.loc[target_gene, 'male_SRCC'] = scipy.stats.spearmanr(model(X).cpu(), y.cpu()).statistic
 
     results_df.loc[target_gene, 'train_loss'] = train_loss
     results_df.loc[target_gene, 'test_loss'] = test_loss
@@ -161,13 +196,13 @@ for target_gene in gene_expressions.columns:
 end_time = time.perf_counter()
 
 #save actual and predicted expression values
-train_actual.to_csv(f'{DATA_ROOT}/Train_dataset_actual_expressions_norm.csv')
-train_predicted.to_csv(f'{DATA_ROOT}/Train_dataset_predicted_expressions_norm.csv')
+#train_actual.to_csv(f'{DATA_ROOT}/Train_dataset_actual_expressions_norm.csv')
+#train_predicted.to_csv(f'{DATA_ROOT}/Train_dataset_predicted_expressions_norm.csv')
 
-test_actual.to_csv(f'{DATA_ROOT}/Test_dataset_actual_expressions_norm.csv')
-test_predicted.to_csv(f'{DATA_ROOT}/Test_dataset_predicted_expressions_norm.csv')
+#test_predicted.to_csv(f'{DATA_ROOT}/Test_dataset_predicted_expressions_norm.csv')
+#test_actual.to_csv(f'{DATA_ROOT}/Test_dataset_actual_expressions_norm.csv')
 
 
-results_df.to_csv('../../data/log_norm_results.csv')
+results_df.to_csv('../../data/complete_results.csv')
 print(f'Models trained in: {end_time - start_time}')
 print('Finished log norm  models')
