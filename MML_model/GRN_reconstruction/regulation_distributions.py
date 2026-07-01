@@ -36,8 +36,8 @@ net = pd.read_csv(f"{DATA_ROOT}/Full data files/network(full).tsv", sep='\t')
 #Load target gene expressions
 
 #define the sex of the samples getting reg contributions for
-#sex = 'male'
-sex = 'female'
+sex = 'male'
+#sex = 'female'
 
 #try new filtering function
 gene_expressions = pd.read_csv((f"{DATA_ROOT}/Full data files/ARCHS4_{sex}_external_expressions_norm.tsv"), sep='\t', header=0, index_col = 0)
